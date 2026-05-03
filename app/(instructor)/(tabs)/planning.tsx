@@ -1,0 +1,166 @@
+import { useMemo, useState } from 'react';
+import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Button } from '../../../components/ui/Button';
+import { DaySelector } from '../../../components/shared/DaySelector';
+import { PlanningGrid, type SlotState } from '../../../components/shared/PlanningGrid';
+import { useInstructorLessonsForDay, useCreateSlot, type Lesson } from '../../../hooks/useLessons';
+import { LessonActionSheet } from '../../../components/instructor/LessonActionSheet';
+
+const PAUSE_HOUR = 13;
+const TYPE_LABEL: Record<string, string> = {
+  city: 'Ville',
+  highway: 'Autoroute',
+  parking: 'Parking',
+  evaluation: 'Évaluation',
+  mock_exam: 'Examen blanc',
+  other: 'Autre',
+};
+
+export default function InstructorPlanning() {
+  const [selected, setSelected] = useState(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  });
+  const { data: lessons = [] } = useInstructorLessonsForDay(selected);
+  const createSlot = useCreateSlot();
+  const [actionLesson, setActionLesson] = useState<Lesson | null>(null);
+
+  const slots = useMemo(() => {
+    const map: Record<number, SlotState> = {};
+    map[PAUSE_HOUR] = { kind: 'unavail', reason: 'Pause déjeuner' };
+    for (const l of lessons as Lesson[]) {
+      const h = new Date(l.scheduled_at).getHours();
+      const profileLink = (l as unknown as {
+        students?: { profiles?: { first_name: string; last_name: string } | null } | null;
+      }).students?.profiles;
+      const subtitle = `${TYPE_LABEL[l.type] ?? l.type} · 1h`;
+      if (l.student_id == null) {
+        map[h] = { kind: 'free' };
+      } else {
+        const status =
+          l.status === 'confirmed' || l.status === 'completed'
+            ? 'confirmed'
+            : l.status === 'pending'
+              ? 'pending'
+              : 'critical';
+        map[h] = {
+          kind: 'booked',
+          tone: status === 'confirmed' ? 'student' : 'instructor',
+          title: profileLink ? `${profileLink.first_name} ${profileLink.last_name[0]}.` : 'Élève',
+          subtitle,
+          status,
+        };
+      }
+    }
+    return map;
+  }, [lessons]);
+
+  const stats = useMemo(() => {
+    let booked = 0;
+    let free = 0;
+    for (let h = 8; h <= 21; h++) {
+      if (h === PAUSE_HOUR) continue;
+      const s = slots[h];
+      if (!s) continue;
+      if (s.kind === 'free') free++;
+      else if (s.kind === 'booked') booked++;
+    }
+    const total = booked + free;
+    const pct = total === 0 ? 0 : Math.round((booked / total) * 100);
+    return { free, total, pct };
+  }, [slots]);
+
+  function shiftDay(delta: number) {
+    const d = new Date(selected);
+    d.setDate(d.getDate() + delta);
+    setSelected(d);
+  }
+
+  async function addSlot() {
+    const next = new Date(selected);
+    // trouve la première heure libre >= 8h
+    for (let h = 8; h <= 21; h++) {
+      if (h === PAUSE_HOUR) continue;
+      if (!slots[h]) {
+        next.setHours(h, 0, 0, 0);
+        try {
+          await createSlot.mutateAsync({ scheduled_at: next.toISOString() });
+        } catch (e: unknown) {
+          Alert.alert('Erreur', e instanceof Error ? e.message : 'Erreur');
+        }
+        return;
+      }
+    }
+    Alert.alert('Aucun créneau libre', 'La journée est complète.');
+  }
+
+  return (
+    <SafeAreaView className="flex-1 bg-bg" edges={['top']}>
+      <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
+        <View className="px-5 pt-3 pb-2">
+          <Text className="text-text text-xl font-bold">Planning</Text>
+        </View>
+
+        <View className="px-5 pb-2.5 flex-row items-center justify-between">
+          <Pressable
+            onPress={() => shiftDay(-1)}
+            className="w-8 h-8 rounded-lg bg-card border border-border items-center justify-center"
+          >
+            <Text className="text-muted text-base">‹</Text>
+          </Pressable>
+          <Text className="text-text text-sm font-bold">
+            {selected.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+          </Text>
+          <Pressable
+            onPress={() => shiftDay(1)}
+            className="w-8 h-8 rounded-lg bg-card border border-border items-center justify-center"
+          >
+            <Text className="text-muted text-base">›</Text>
+          </Pressable>
+        </View>
+
+        <DaySelector selected={selected} onSelect={setSelected} variant="instructor" />
+
+        <View className="mx-5 my-2.5 bg-card border border-border rounded-2xl px-3 py-2.5 flex-row justify-between">
+          <View>
+            <Text className="text-muted2 text-[9px] uppercase tracking-wider">Créneaux libres</Text>
+            <Text className="text-student text-base font-bold mt-0.5">
+              {stats.free} / {stats.total}
+            </Text>
+          </View>
+          <View>
+            <Text className="text-muted2 text-[9px] uppercase tracking-wider text-right">Remplissage</Text>
+            <Text className="text-warning text-base font-bold mt-0.5 text-right">{stats.pct}%</Text>
+          </View>
+        </View>
+
+        <PlanningGrid
+          slots={slots}
+          variant="instructor"
+          onPressBooked={(hour) => {
+            const l = (lessons as Lesson[]).find(
+              (x) => new Date(x.scheduled_at).getHours() === hour
+            );
+            if (l) setActionLesson(l);
+          }}
+        />
+
+        <View className="px-5 pt-3.5">
+          <Button
+            label={createSlot.isPending ? '…' : '+ Ajouter un créneau'}
+            variant="instructor"
+            onPress={addSlot}
+            loading={createSlot.isPending}
+          />
+        </View>
+      </ScrollView>
+      <LessonActionSheet
+        visible={!!actionLesson}
+        onClose={() => setActionLesson(null)}
+        lesson={actionLesson}
+      />
+    </SafeAreaView>
+  );
+}

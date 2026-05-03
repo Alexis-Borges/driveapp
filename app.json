@@ -1,30 +1,50 @@
 {
   "expo": {
-    "name": "driveapp",
+    "name": "DriveApp",
     "slug": "driveapp",
+    "scheme": "driveapp",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#0C0D0F"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.driveapp.mobile"
     },
     "android": {
+      "package": "com.driveapp.mobile",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#0C0D0F"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#7C75FF"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "DriveApp accède à tes photos pour ta photo de profil."
+        }
+      ]
+    ]
   }
 }
