@@ -14,7 +14,11 @@ import { LockedRow } from '../../../components/student/LockedRow';
 import { LinkInstructorSheet } from '../../../components/student/LinkInstructorSheet';
 import { SectionLabel } from '../../../components/shared/SectionLabel';
 import { useStudentBalance, useStudentPackage } from '../../../hooks/useBalance';
-import { useUpcomingLessonForStudent } from '../../../hooks/useLessons';
+import {
+  useUpcomingLessonForStudent,
+  useUpcomingEvaluation,
+  useLastFeedbackForStudent,
+} from '../../../hooks/useLessons';
 
 const TYPE_LABEL: Record<string, string> = {
   city: 'Ville',
@@ -38,6 +42,8 @@ export default function StudentHome() {
   const { data: balance } = useStudentBalance();
   const { data: pkg } = useStudentPackage();
   const { data: nextLesson } = useUpcomingLessonForStudent();
+  const { data: evaluation } = useUpcomingEvaluation();
+  const { data: lastFeedback } = useLastFeedbackForStudent();
   const [linkOpen, setLinkOpen] = useState(false);
 
   const owed = balance && balance.balance_hours < 0 ? Math.abs(balance.balance_hours) * HOURLY_RATE_EUR : 0;
@@ -88,11 +94,29 @@ export default function StudentHome() {
           body="Tout solde impayé 48h avant la séance = annulation automatique."
         />
 
-        <LockedRow
-          icon="🔒"
-          title="Évaluation de conduite"
-          subtitle="En attente de planification par votre monitrice"
-        />
+        {evaluation ? (
+          <View className="mx-5 mb-2 bg-instructor/10 border border-instructor/25 rounded-2xl px-3 py-3 flex-row items-center gap-2.5">
+            <Text className="text-base">📋</Text>
+            <View className="flex-1">
+              <Text className="text-text text-sm font-medium">Évaluation planifiée</Text>
+              <Text className="text-instructor text-[11px] mt-0.5">
+                {new Date(evaluation.scheduled_at).toLocaleString('fr-FR', {
+                  weekday: 'long',
+                  day: 'numeric',
+                  month: 'long',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </Text>
+            </View>
+          </View>
+        ) : (
+          <LockedRow
+            icon="🔒"
+            title="Évaluation de conduite"
+            subtitle="En attente de planification par votre monitrice"
+          />
+        )}
 
         <SectionLabel>Ma progression</SectionLabel>
         <ProgressBar done={doneHours} total={totalHours || 20} />
@@ -117,12 +141,25 @@ export default function StudentHome() {
         </View>
 
         <SectionLabel>Dernier retour</SectionLabel>
-        <FeedbackCard
-          author="Monitrice"
-          date="—"
-          body="Aucun retour pour le moment. Tes commentaires post-séance apparaîtront ici."
-          rating={0}
-        />
+        {lastFeedback ? (
+          <FeedbackCard
+            author="Monitrice"
+            date={new Date(lastFeedback.scheduled_at).toLocaleDateString('fr-FR', {
+              day: 'numeric',
+              month: 'long',
+              year: 'numeric',
+            })}
+            body={lastFeedback.feedback}
+            rating={lastFeedback.rating ?? 0}
+          />
+        ) : (
+          <FeedbackCard
+            author="Monitrice"
+            date="—"
+            body="Aucun retour pour le moment. Tes commentaires post-séance apparaîtront ici."
+            rating={0}
+          />
+        )}
       </ScrollView>
 
       <LinkInstructorSheet visible={linkOpen} onClose={() => setLinkOpen(false)} />

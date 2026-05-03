@@ -45,7 +45,7 @@ export default function StudentProfile() {
         </Pressable>
         <Field label="Email" value={profile?.email ?? ''} locked />
         <Pressable onPress={() => setEditOpen(true)}>
-          <Field label="Téléphone" value="—" />
+          <Field label="Téléphone" value={profile?.phone ?? ''} />
         </Pressable>
         <Field
           label="Forfait actif"
@@ -57,7 +57,7 @@ export default function StudentProfile() {
           locked
         />
         <Pressable onPress={() => setEditOpen(true)}>
-          <Field label="Description" value="—" />
+          <Field label="Description" value={profile?.bio ?? ''} />
         </Pressable>
 
         <View className="px-5 mt-6 gap-2">

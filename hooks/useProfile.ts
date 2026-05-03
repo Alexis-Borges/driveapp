@@ -22,7 +22,7 @@ export function useUpdateProfile() {
         .from('profiles')
         .update(patch as never)
         .eq('id', profile.id)
-        .select('id, role, first_name, last_name, email, avatar_url')
+        .select('id, role, first_name, last_name, email, avatar_url, phone, bio')
         .single();
       if (error) throw error;
       return data;

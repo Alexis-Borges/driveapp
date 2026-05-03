@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react';
-import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '../../../components/ui/Button';
 import { DaySelector } from '../../../components/shared/DaySelector';
 import { PlanningGrid, type SlotState } from '../../../components/shared/PlanningGrid';
-import { useInstructorLessonsForDay, useCreateSlot, type Lesson } from '../../../hooks/useLessons';
+import { useInstructorLessonsForDay, type Lesson } from '../../../hooks/useLessons';
 import { LessonActionSheet } from '../../../components/instructor/LessonActionSheet';
+import { CreateSlotSheet } from '../../../components/instructor/CreateSlotSheet';
 
 const PAUSE_HOUR = 13;
 const TYPE_LABEL: Record<string, string> = {
@@ -24,8 +25,8 @@ export default function InstructorPlanning() {
     return d;
   });
   const { data: lessons = [] } = useInstructorLessonsForDay(selected);
-  const createSlot = useCreateSlot();
   const [actionLesson, setActionLesson] = useState<Lesson | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
 
   const slots = useMemo(() => {
     const map: Record<number, SlotState> = {};
@@ -78,23 +79,14 @@ export default function InstructorPlanning() {
     setSelected(d);
   }
 
-  async function addSlot() {
-    const next = new Date(selected);
-    // trouve la première heure libre >= 8h
-    for (let h = 8; h <= 21; h++) {
-      if (h === PAUSE_HOUR) continue;
-      if (!slots[h]) {
-        next.setHours(h, 0, 0, 0);
-        try {
-          await createSlot.mutateAsync({ scheduled_at: next.toISOString() });
-        } catch (e: unknown) {
-          Alert.alert('Erreur', e instanceof Error ? e.message : 'Erreur');
-        }
-        return;
-      }
+  const takenHours = useMemo(() => {
+    const s = new Set<number>();
+    s.add(PAUSE_HOUR);
+    for (const l of lessons as Lesson[]) {
+      s.add(new Date(l.scheduled_at).getHours());
     }
-    Alert.alert('Aucun créneau libre', 'La journée est complète.');
-  }
+    return s;
+  }, [lessons]);
 
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={['top']}>
@@ -149,10 +141,9 @@ export default function InstructorPlanning() {
 
         <View className="px-5 pt-3.5">
           <Button
-            label={createSlot.isPending ? '…' : '+ Ajouter un créneau'}
+            label="+ Ajouter un créneau"
             variant="instructor"
-            onPress={addSlot}
-            loading={createSlot.isPending}
+            onPress={() => setCreateOpen(true)}
           />
         </View>
       </ScrollView>
@@ -160,6 +151,12 @@ export default function InstructorPlanning() {
         visible={!!actionLesson}
         onClose={() => setActionLesson(null)}
         lesson={actionLesson}
+      />
+      <CreateSlotSheet
+        visible={createOpen}
+        onClose={() => setCreateOpen(false)}
+        date={selected}
+        takenHours={takenHours}
       />
     </SafeAreaView>
   );

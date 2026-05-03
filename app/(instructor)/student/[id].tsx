@@ -1,8 +1,11 @@
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../../lib/supabase';
+import { BottomSheet } from '../../../components/shared/BottomSheet';
+import { useAuthStore } from '../../../stores/authStore';
 import { Avatar } from '../../../components/ui/Avatar';
 import { Badge } from '../../../components/ui/Badge';
 import { Button } from '../../../components/ui/Button';
@@ -21,6 +24,35 @@ type StudentDetail = {
 export default function StudentDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const profile = useAuthStore((s) => s.profile);
+  const qc = useQueryClient();
+  const [evalOpen, setEvalOpen] = useState(false);
+  const [evalDate, setEvalDate] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 7);
+    d.setHours(10, 0, 0, 0);
+    return d;
+  });
+  const [scheduling, setScheduling] = useState(false);
+
+  async function scheduleEvaluation() {
+    if (!profile) return;
+    setScheduling(true);
+    const { error } = await supabase.from('lessons').insert({
+      instructor_id: profile.id,
+      student_id: id,
+      scheduled_at: evalDate.toISOString(),
+      type: 'evaluation',
+      status: 'pending',
+      duration_minutes: 60,
+    } as never);
+    setScheduling(false);
+    if (error) return Alert.alert('Erreur', error.message);
+    qc.invalidateQueries({ queryKey: ['student-lessons-recent', id] });
+    qc.invalidateQueries({ queryKey: ['lessons'] });
+    setEvalOpen(false);
+    Alert.alert('Évaluation planifiée', 'L\'élève voit le créneau sur son accueil.');
+  }
 
   const { data } = useQuery({
     queryKey: ['student-detail', id],
@@ -147,11 +179,16 @@ export default function StudentDetail() {
           total={data.package_total_hours || 20}
         />
 
-        <View className="px-5">
+        <View className="px-5 gap-2">
           <Button
             label="💬 Envoyer un message"
             variant="instructor"
             onPress={() => router.push(`/(instructor)/chat/${id}`)}
+          />
+          <Button
+            label="📋 Planifier une évaluation"
+            variant="outline"
+            onPress={() => setEvalOpen(true)}
           />
         </View>
 
@@ -228,6 +265,78 @@ export default function StudentDetail() {
           ))
         )}
       </ScrollView>
+
+      <BottomSheet visible={evalOpen} onClose={() => setEvalOpen(false)}>
+        <Text className="text-text text-base font-bold mb-1">Planifier une évaluation</Text>
+        <Text className="text-muted text-xs mb-4">
+          L'élève recevra une notification et verra le créneau sur son accueil.
+        </Text>
+        <View className="flex-row gap-2 mb-3">
+          <DateOption
+            label="Dans 3 jours"
+            selected={Math.abs(evalDate.getTime() - dateInDays(3).getTime()) < 60_000}
+            onPress={() => setEvalDate(dateInDays(3))}
+          />
+          <DateOption
+            label="Dans 1 sem."
+            selected={Math.abs(evalDate.getTime() - dateInDays(7).getTime()) < 60_000}
+            onPress={() => setEvalDate(dateInDays(7))}
+          />
+          <DateOption
+            label="Dans 2 sem."
+            selected={Math.abs(evalDate.getTime() - dateInDays(14).getTime()) < 60_000}
+            onPress={() => setEvalDate(dateInDays(14))}
+          />
+        </View>
+        <View className="bg-card2 border border-border rounded-2xl px-3 py-3 mb-3">
+          <Text className="text-muted2 text-[9px] uppercase tracking-wider mb-0.5">Date</Text>
+          <Text className="text-text text-sm font-medium">
+            {evalDate.toLocaleString('fr-FR', {
+              weekday: 'long',
+              day: 'numeric',
+              month: 'long',
+              hour: '2-digit',
+              minute: '2-digit',
+            })}
+          </Text>
+        </View>
+        <Button
+          label="Planifier l'évaluation"
+          variant="instructor"
+          onPress={scheduleEvaluation}
+          loading={scheduling}
+        />
+      </BottomSheet>
     </SafeAreaView>
+  );
+}
+
+function dateInDays(n: number): Date {
+  const d = new Date();
+  d.setDate(d.getDate() + n);
+  d.setHours(10, 0, 0, 0);
+  return d;
+}
+
+function DateOption({
+  label,
+  selected,
+  onPress,
+}: {
+  label: string;
+  selected: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      className={`flex-1 py-2 rounded-xl border items-center ${
+        selected ? 'bg-instructor border-instructor' : 'bg-card border-border'
+      }`}
+    >
+      <Text className={selected ? 'text-white font-bold text-xs' : 'text-text text-xs'}>
+        {label}
+      </Text>
+    </Pressable>
   );
 }

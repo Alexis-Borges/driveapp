@@ -11,7 +11,7 @@ export function useAuthBootstrap() {
     async function loadProfile(userId: string) {
       const { data } = await supabase
         .from('profiles')
-        .select('id, role, first_name, last_name, email, avatar_url')
+        .select('id, role, first_name, last_name, email, avatar_url, phone, bio')
         .eq('id', userId)
         .single();
       if (mounted) setProfile(data ?? null);

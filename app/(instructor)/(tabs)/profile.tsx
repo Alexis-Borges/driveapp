@@ -45,10 +45,10 @@ export default function InstructorProfile() {
         </Pressable>
         <Field label="Email" value={profile?.email ?? ''} locked />
         <Pressable onPress={() => setEditOpen(true)}>
-          <Field label="Téléphone" value="—" />
+          <Field label="Téléphone" value={profile?.phone ?? ''} />
         </Pressable>
         <Pressable onPress={() => setEditOpen(true)}>
-          <Field label="Description" value="—" />
+          <Field label="Description" value={profile?.bio ?? ''} />
         </Pressable>
 
         <View className="px-5 mt-6">

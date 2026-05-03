@@ -12,7 +12,8 @@ import { StudentRow } from '../../../components/instructor/StudentRow';
 import { SectionLabel } from '../../../components/shared/SectionLabel';
 import { InviteStudentSheet } from '../../../components/instructor/InviteStudentSheet';
 import { useInstructorStudents } from '../../../hooks/useStudents';
-import { useTodayLessonsForInstructor, type Lesson } from '../../../hooks/useLessons';
+import { useTodayLessonsForInstructor, useInstructorWeekStats, type Lesson } from '../../../hooks/useLessons';
+import { useInstructorReferralCount } from '../../../hooks/useReferrals';
 
 function formatTime(iso: string) {
   const d = new Date(iso);
@@ -38,18 +39,19 @@ export default function InstructorHome() {
   const router = useRouter();
   const { data: students = [] } = useInstructorStudents();
   const { data: today = [] } = useTodayLessonsForInstructor();
+  const { data: weekStats } = useInstructorWeekStats();
+  const { data: referrals = 0 } = useInstructorReferralCount();
   const [inviteOpen, setInviteOpen] = useState(false);
 
   const stats = useMemo(() => {
     const overdue = students.filter((s) => s.balance_hours < 0).length;
-    const weekActive = students.length;
     return {
-      active: weekActive,
-      lessonsThisWeek: today.length, // simplification : aujourd'hui
+      active: students.length,
+      lessonsThisWeek: weekStats?.count ?? 0,
       overdue,
-      referrals: 0,
+      referrals,
     };
-  }, [students, today]);
+  }, [students, weekStats, referrals]);
 
   const overdueStudents = students.filter((s) => s.balance_hours < 0);
 
@@ -92,7 +94,7 @@ export default function InstructorHome() {
         <KpiScroll
           items={[
             { icon: '👤', value: stats.active, label: 'Élèves actifs' },
-            { icon: '📅', value: stats.lessonsThisWeek, label: 'Aujourd\'hui' },
+            { icon: '📅', value: stats.lessonsThisWeek, label: 'Séances/sem' },
             { icon: '⚠️', value: stats.overdue, label: 'Impayés', tone: stats.overdue > 0 ? 'danger' : 'default' },
             { icon: '🤝', value: stats.referrals, label: 'Parrainages', tone: 'warning' },
           ]}

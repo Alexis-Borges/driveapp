@@ -5,6 +5,7 @@ import { PackCard } from '../../../components/student/PackCard';
 import { PaymentSheet } from '../../../components/student/PaymentSheet';
 import { SectionLabel } from '../../../components/shared/SectionLabel';
 import { useStudentPackage } from '../../../hooks/useBalance';
+import { useReferralStats } from '../../../hooks/useReferrals';
 
 type Pack = {
   hours: number;
@@ -48,6 +49,7 @@ const PACKS: Pack[] = [
 
 export default function StudentShop() {
   const { data: pkg } = useStudentPackage();
+  const { data: refStats } = useReferralStats();
   const [selected, setSelected] = useState<Pack | null>(null);
 
   return (
@@ -91,9 +93,12 @@ export default function StudentShop() {
             </Text>
           </View>
           <View className="flex-row gap-1.5">
-            <Stat label="Parrainés" value="0" />
-            <Stat label="Séance gagnée" value="0" />
-            <Stat label="Remise dispo" value="—" />
+            <Stat label="Parrainés" value={String(refStats?.count ?? 0)} />
+            <Stat label="Séance gagnée" value={String(refStats?.free_lessons ?? 0)} />
+            <Stat
+              label="Remise dispo"
+              value={refStats?.discount_eur ? `−${refStats.discount_eur}€` : '—'}
+            />
           </View>
         </View>
       </ScrollView>

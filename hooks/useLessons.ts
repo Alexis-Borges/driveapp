@@ -141,3 +141,77 @@ export function useUpcomingLessonForStudent() {
 export function useTodayLessonsForInstructor() {
   return useInstructorLessonsForDay(new Date());
 }
+
+export function useInstructorWeekStats() {
+  const profile = useAuthStore((s) => s.profile);
+  return useQuery({
+    queryKey: ['instructor-week-stats', profile?.id],
+    enabled: !!profile && profile.role === 'instructor',
+    queryFn: async () => {
+      const start = new Date();
+      const day = start.getDay();
+      const diff = (day + 6) % 7; // lundi = début
+      start.setDate(start.getDate() - diff);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(start);
+      end.setDate(end.getDate() + 7);
+
+      const { data, error } = await supabase
+        .from('lessons')
+        .select('id, status', { count: 'exact', head: false })
+        .eq('instructor_id', profile!.id)
+        .gte('scheduled_at', start.toISOString())
+        .lt('scheduled_at', end.toISOString())
+        .in('status', ['pending', 'confirmed', 'completed']);
+      if (error) throw error;
+      return { count: (data ?? []).length };
+    },
+  });
+}
+
+export function useUpcomingEvaluation() {
+  const profile = useAuthStore((s) => s.profile);
+  return useQuery({
+    queryKey: ['eval', profile?.id],
+    enabled: !!profile && profile.role === 'student',
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('lessons')
+        .select('id, scheduled_at, status')
+        .eq('student_id', profile!.id)
+        .eq('type', 'evaluation')
+        .in('status', ['pending', 'confirmed'])
+        .gte('scheduled_at', new Date().toISOString())
+        .order('scheduled_at')
+        .limit(1)
+        .maybeSingle();
+      return data as { id: string; scheduled_at: string; status: string } | null;
+    },
+  });
+}
+
+export function useLastFeedbackForStudent() {
+  const profile = useAuthStore((s) => s.profile);
+  return useQuery({
+    queryKey: ['last-feedback', profile?.id],
+    enabled: !!profile && profile.role === 'student',
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('lessons')
+        .select('id, scheduled_at, feedback, rating, instructor_id')
+        .eq('student_id', profile!.id)
+        .eq('status', 'completed')
+        .not('feedback', 'is', null)
+        .order('scheduled_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return data as {
+        id: string;
+        scheduled_at: string;
+        feedback: string;
+        rating: number | null;
+        instructor_id: string;
+      } | null;
+    },
+  });
+}

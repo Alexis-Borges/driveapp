@@ -24,6 +24,8 @@ export function EditProfileSheet({ visible, onClose, variant }: Props) {
     if (visible && profile) {
       setFirstName(profile.first_name);
       setLastName(profile.last_name);
+      setPhone(profile.phone ?? '');
+      setBio(profile.bio ?? '');
     }
   }, [visible, profile]);
 

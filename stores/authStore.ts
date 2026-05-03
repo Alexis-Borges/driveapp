@@ -9,6 +9,8 @@ type Profile = {
   last_name: string;
   email: string;
   avatar_url?: string | null;
+  phone?: string | null;
+  bio?: string | null;
 };
 
 type AuthState = {

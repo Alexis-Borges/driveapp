@@ -11,7 +11,7 @@
     "build:preview": "eas build --profile preview --platform android",
     "build:prod": "eas build --profile production --platform all",
     "supabase:types": "supabase gen types typescript --project-id gaqivtanxcqcekfdzlfk > types/database.ts",
-    "supabase:deploy:fns": "supabase functions deploy create-payment-intent stripe-webhook stripe-connect-onboard auto-cancel-48h send-push"
+    "supabase:deploy:fns": "supabase functions deploy create-payment-intent stripe-webhook stripe-connect-onboard auto-cancel-48h lesson-reminders send-push"
   },
   "dependencies": {
     "@expo-google-fonts/dm-mono": "^0.4.2",
