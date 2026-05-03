@@ -4,6 +4,7 @@ import { Link } from 'expo-router';
 import { Button } from '../../components/ui/Button';
 import { TextField } from '../../components/ui/TextField';
 import { supabase } from '../../lib/supabase';
+import { loginSchema, firstError } from '../../lib/validation';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -11,6 +12,12 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
 
   async function handleLogin() {
+    const parsed = loginSchema.safeParse({ email, password });
+    const err = firstError(parsed);
+    if (err) {
+      Alert.alert('Champs invalides', err);
+      return;
+    }
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
@@ -45,6 +52,12 @@ export default function Login() {
         <View className="mt-2">
           <Button label="Se connecter" onPress={handleLogin} loading={loading} />
         </View>
+
+        <Link href="/(auth)/reset" asChild>
+          <Pressable className="mt-3 items-center">
+            <Text className="text-muted text-xs">Mot de passe oublié ?</Text>
+          </Pressable>
+        </Link>
 
         <Link href="/(auth)/signup" asChild>
           <Pressable className="mt-6 items-center">

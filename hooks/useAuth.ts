@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { Alert } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../stores/authStore';
 
@@ -42,4 +43,19 @@ export function useAuthBootstrap() {
 
 export async function signOut() {
   await supabase.auth.signOut();
+}
+
+export function confirmSignOut() {
+  Alert.alert(
+    'Se déconnecter ?',
+    'Tu devras te reconnecter pour accéder à ton compte.',
+    [
+      { text: 'Annuler', style: 'cancel' },
+      {
+        text: 'Se déconnecter',
+        style: 'destructive',
+        onPress: () => signOut(),
+      },
+    ]
+  );
 }

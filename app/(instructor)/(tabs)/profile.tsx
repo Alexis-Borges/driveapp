@@ -7,7 +7,7 @@ import { EditProfileSheet } from '../../../components/shared/EditProfileSheet';
 import { StripeConnectCard } from '../../../components/instructor/StripeConnectCard';
 import { SectionLabel } from '../../../components/shared/SectionLabel';
 import { useAuthStore } from '../../../stores/authStore';
-import { signOut } from '../../../hooks/useAuth';
+import { confirmSignOut } from '../../../hooks/useAuth';
 
 function Field({ label, value, locked }: { label: string; value: string; locked?: boolean }) {
   return (
@@ -55,7 +55,7 @@ export default function InstructorProfile() {
           <Button label="Modifier mon profil" variant="instructor" onPress={() => setEditOpen(true)} />
         </View>
         <View className="px-5 mt-2">
-          <Button label="Se déconnecter" onPress={signOut} variant="danger" />
+          <Button label="Se déconnecter" onPress={confirmSignOut} variant="danger" />
         </View>
       </ScrollView>
 

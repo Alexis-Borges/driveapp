@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { RefreshControl, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '../../../stores/authStore';
@@ -13,6 +13,7 @@ import { FeedbackCard } from '../../../components/student/FeedbackCard';
 import { LockedRow } from '../../../components/student/LockedRow';
 import { LinkInstructorSheet } from '../../../components/student/LinkInstructorSheet';
 import { EmptyState } from '../../../components/shared/EmptyState';
+import { Checklist } from '../../../components/shared/Checklist';
 import { SectionLabel } from '../../../components/shared/SectionLabel';
 import { useStudentBalance, useStudentPackage } from '../../../hooks/useBalance';
 import { useRefresh } from '../../../hooks/useRefresh';
@@ -58,7 +59,6 @@ export default function StudentHome() {
   const owed = balance && balance.balance_hours < 0 ? Math.abs(balance.balance_hours) * HOURLY_RATE_EUR : 0;
   const totalHours = pkg?.package_total_hours ?? 0;
   const doneHours = balance ? Math.max(0, balance.hours_booked) : 0;
-  const noInstructor = pkg && !pkg.instructor_id;
 
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={['top']}>
@@ -85,20 +85,37 @@ export default function StudentHome() {
           />
         </View>
 
-        {noInstructor ? (
-          <AlertCard
-            tone="instructor"
-            title="🚗 Lie ton moniteur"
-            body="Pour voir ton planning et réserver, lie ton compte au moniteur qui t'a invité."
-            cta="Lier maintenant"
-            onPress={() => setLinkOpen(true)}
-          />
-        ) : null}
+        <Checklist
+          items={[
+            {
+              id: 'link',
+              title: 'Lier ton moniteur',
+              done: !!pkg?.instructor_id,
+              cta: 'Lier',
+              onPress: () => setLinkOpen(true),
+            },
+            {
+              id: 'pack',
+              title: 'Acheter ton premier pack d\'heures',
+              done: (balance?.hours_paid ?? 0) > 0,
+              cta: 'Boutique',
+              onPress: () => router.push('/(student)/shop'),
+            },
+            {
+              id: 'book',
+              title: 'Réserver ta première séance',
+              done: !!nextLesson,
+              cta: 'Planning',
+              onPress: () => router.push('/(student)/planning'),
+            },
+          ]}
+          variant="student"
+        />
 
         {owed > 0 ? (
           <PaymentBanner
             amountEuros={owed}
-            onPay={() => Alert.alert('Paiement', 'Boutique → packs (Sprint 4)')}
+            onPay={() => router.push('/(student)/shop')}
           />
         ) : null}
 

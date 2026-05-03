@@ -12,7 +12,10 @@ import { StudentRow } from '../../../components/instructor/StudentRow';
 import { SectionLabel } from '../../../components/shared/SectionLabel';
 import { InviteStudentSheet } from '../../../components/instructor/InviteStudentSheet';
 import { EmptyState } from '../../../components/shared/EmptyState';
+import { Checklist, type ChecklistItem } from '../../../components/shared/Checklist';
+import { useInstructorStripeStatus, useStripeConnectOnboarding } from '../../../hooks/useStripeConnect';
 import { useInstructorStudents } from '../../../hooks/useStudents';
+import { SkeletonCard } from '../../../components/shared/Skeleton';
 import { useTodayLessonsForInstructor, useInstructorWeekStats, type Lesson } from '../../../hooks/useLessons';
 import { useInstructorReferralCount } from '../../../hooks/useReferrals';
 import { useRefresh } from '../../../hooks/useRefresh';
@@ -39,11 +42,44 @@ const TYPE_LABEL: Record<string, string> = {
 export default function InstructorHome() {
   const profile = useAuthStore((s) => s.profile);
   const router = useRouter();
-  const { data: students = [] } = useInstructorStudents();
-  const { data: today = [] } = useTodayLessonsForInstructor();
+  const { data: students = [], isLoading: studentsLoading } = useInstructorStudents();
+  const { data: today = [], isLoading: todayLoading } = useTodayLessonsForInstructor();
   const { data: weekStats } = useInstructorWeekStats();
   const { data: referrals = 0 } = useInstructorReferralCount();
+  const { data: stripe } = useInstructorStripeStatus();
+  const stripeOnboard = useStripeConnectOnboarding();
   const [inviteOpen, setInviteOpen] = useState(false);
+
+  const checklist: ChecklistItem[] = [
+    {
+      id: 'stripe',
+      title: 'Activer les paiements Stripe',
+      done: !!stripe?.is_verified,
+      cta: 'Activer',
+      onPress: () => stripeOnboard.mutate(),
+    },
+    {
+      id: 'profile',
+      title: 'Compléter ton profil (téléphone + bio)',
+      done: !!(profile?.phone && profile?.bio),
+      cta: 'Profil',
+      onPress: () => router.push('/(instructor)/profile'),
+    },
+    {
+      id: 'slot',
+      title: 'Créer ton premier créneau',
+      done: today.length > 0,
+      cta: 'Planning',
+      onPress: () => router.push('/(instructor)/planning'),
+    },
+    {
+      id: 'invite',
+      title: 'Inviter ton premier élève',
+      done: students.length > 0,
+      cta: 'Inviter',
+      onPress: () => setInviteOpen(true),
+    },
+  ];
   const { refreshing, onRefresh } = useRefresh([
     'instructor-students',
     'lessons',
@@ -88,6 +124,8 @@ export default function InstructorHome() {
           />
         </View>
 
+        <Checklist items={checklist} variant="instructor" />
+
         {overdueStudents.length > 0 ? (
           <>
             <SectionLabel>⚠ Alertes</SectionLabel>
@@ -115,7 +153,12 @@ export default function InstructorHome() {
 
         <SectionLabel>Aujourd'hui — {todayLabel()}</SectionLabel>
         <View className="px-5 gap-1.5">
-          {today.length === 0 ? (
+          {todayLoading ? (
+            <>
+              <SkeletonCard height={48} />
+              <SkeletonCard height={48} />
+            </>
+          ) : today.length === 0 ? (
             <Text className="text-muted2 text-xs">
               Aucune séance aujourd'hui — passe au planning pour ouvrir des créneaux.
             </Text>
@@ -161,7 +204,13 @@ export default function InstructorHome() {
           </Pressable>
         </View>
         <View className="px-5 gap-1.5">
-          {students.length === 0 ? (
+          {studentsLoading ? (
+            <>
+              <SkeletonCard height={52} />
+              <SkeletonCard height={52} />
+              <SkeletonCard height={52} />
+            </>
+          ) : students.length === 0 ? (
             <EmptyState
               icon="👥"
               title="Aucun élève pour le moment"

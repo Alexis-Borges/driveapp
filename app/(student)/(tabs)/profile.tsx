@@ -7,7 +7,7 @@ import { EditProfileSheet } from '../../../components/shared/EditProfileSheet';
 import { LinkInstructorSheet } from '../../../components/student/LinkInstructorSheet';
 import { SectionLabel } from '../../../components/shared/SectionLabel';
 import { useAuthStore } from '../../../stores/authStore';
-import { signOut } from '../../../hooks/useAuth';
+import { confirmSignOut } from '../../../hooks/useAuth';
 import { useStudentPackage } from '../../../hooks/useBalance';
 
 function Field({ label, value, locked }: { label: string; value: string; locked?: boolean }) {
@@ -65,7 +65,7 @@ export default function StudentProfile() {
           {!pkg?.instructor_id ? (
             <Button label="Lier mon moniteur" variant="outline" onPress={() => setLinkOpen(true)} />
           ) : null}
-          <Button label="Se déconnecter" onPress={signOut} variant="danger" />
+          <Button label="Se déconnecter" onPress={confirmSignOut} variant="danger" />
         </View>
       </ScrollView>
 

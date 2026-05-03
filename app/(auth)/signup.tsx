@@ -12,6 +12,7 @@ import { Link, useLocalSearchParams } from 'expo-router';
 import { Button } from '../../components/ui/Button';
 import { TextField } from '../../components/ui/TextField';
 import { supabase } from '../../lib/supabase';
+import { signupSchema, firstError } from '../../lib/validation';
 import type { UserRole } from '../../types/database';
 
 export default function Signup() {
@@ -29,12 +30,18 @@ export default function Signup() {
   const [loading, setLoading] = useState(false);
 
   async function handleSignup() {
-    if (!firstName || !lastName || !email || password.length < 6) {
-      Alert.alert('Champs manquants', 'Vérifie tous les champs (mdp ≥ 6 car.).');
-      return;
-    }
-    if (role === 'instructor' && !agreement) {
-      Alert.alert('N° agrément requis');
+    const parsed = signupSchema.safeParse({
+      role,
+      first_name: firstName,
+      last_name: lastName,
+      email,
+      password,
+      agreement,
+      referral,
+    });
+    const err = firstError(parsed);
+    if (err) {
+      Alert.alert('Champs invalides', err);
       return;
     }
     setLoading(true);

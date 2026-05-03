@@ -79,7 +79,12 @@ export function useCreateSlot() {
         type: params.type ?? 'city',
         status: 'pending',
       } as never);
-      if (error) throw error;
+      if (error) {
+        if (error.code === '23505') {
+          throw new Error('Ce créneau existe déjà à cette heure.');
+        }
+        throw error;
+      }
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['lessons'] }),
   });
