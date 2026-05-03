@@ -8,14 +8,18 @@ import {
   Text,
   View,
 } from 'react-native';
-import { Link } from 'expo-router';
+import { Link, useLocalSearchParams } from 'expo-router';
 import { Button } from '../../components/ui/Button';
 import { TextField } from '../../components/ui/TextField';
 import { supabase } from '../../lib/supabase';
 import type { UserRole } from '../../types/database';
 
 export default function Signup() {
-  const [role, setRole] = useState<UserRole>('student');
+  const params = useLocalSearchParams<{ invitedBy?: string; role?: string }>();
+  const invitedBy = params.invitedBy ?? null;
+  const initialRole: UserRole =
+    params.role === 'instructor' ? 'instructor' : 'student';
+  const [role, setRole] = useState<UserRole>(initialRole);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -74,6 +78,7 @@ export default function Signup() {
           id: data.user.id,
           referral_code: '',
           referred_by: referredBy,
+          instructor_id: invitedBy ?? null,
         } as never);
       } else if (role === 'instructor') {
         await supabase.from('instructors').insert({
@@ -94,7 +99,11 @@ export default function Signup() {
     >
       <ScrollView contentContainerStyle={{ padding: 24, paddingTop: 60 }}>
         <Text className="text-text text-3xl font-bold mb-2">Créer un compte</Text>
-        <Text className="text-muted mb-6">Choisis ton rôle pour démarrer.</Text>
+        <Text className="text-muted mb-6">
+          {invitedBy
+            ? 'Tu as été invité par ton moniteur — finalise ton inscription.'
+            : 'Choisis ton rôle pour démarrer.'}
+        </Text>
 
         <View className="flex-row gap-2 mb-5">
           <Pressable

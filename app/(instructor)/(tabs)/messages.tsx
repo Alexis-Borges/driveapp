@@ -24,7 +24,7 @@ export default function InstructorMessages() {
 
       {threads.length === 0 ? (
         <Text className="text-muted2 text-xs px-5 mt-4">
-          Aucune conversation pour le moment.
+          Aucune conversation. Tes échanges avec les élèves apparaîtront ici.
         </Text>
       ) : (
         threads.map((t) => {

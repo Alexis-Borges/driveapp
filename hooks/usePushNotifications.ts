@@ -3,6 +3,7 @@ import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
+import { useRouter } from 'expo-router';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../stores/authStore';
 
@@ -47,6 +48,7 @@ async function registerForPushAsync(): Promise<string | null> {
 
 export function usePushRegistration() {
   const profile = useAuthStore((s) => s.profile);
+  const router = useRouter();
 
   useEffect(() => {
     if (!profile) return;
@@ -72,8 +74,26 @@ export function usePushRegistration() {
       }
     })();
 
+    const sub = Notifications.addNotificationResponseReceivedListener((res) => {
+      const data = res.notification.request.content.data as
+        | { type?: string; chat_with?: string; lesson_id?: string }
+        | undefined;
+      if (!data) return;
+      const isInstructor = profile.role === 'instructor';
+
+      if (data.type === 'message' && data.chat_with) {
+        if (isInstructor) router.push(`/(instructor)/chat/${data.chat_with}`);
+        else router.push('/(student)/messages');
+      } else if (data.type === 'booking' || data.type === 'reminder') {
+        router.push(isInstructor ? '/(instructor)/planning' : '/(student)/planning');
+      } else if (data.type === 'cancel') {
+        router.push(isInstructor ? '/(instructor)/home' : '/(student)/home');
+      }
+    });
+
     return () => {
       mounted = false;
+      sub.remove();
     };
-  }, [profile?.id]);
+  }, [profile?.id, profile?.role, router]);
 }

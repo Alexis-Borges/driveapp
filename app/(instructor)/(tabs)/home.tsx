@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '../../../stores/authStore';
@@ -11,9 +11,11 @@ import { TodayLessonItem } from '../../../components/instructor/TodayLessonItem'
 import { StudentRow } from '../../../components/instructor/StudentRow';
 import { SectionLabel } from '../../../components/shared/SectionLabel';
 import { InviteStudentSheet } from '../../../components/instructor/InviteStudentSheet';
+import { EmptyState } from '../../../components/shared/EmptyState';
 import { useInstructorStudents } from '../../../hooks/useStudents';
 import { useTodayLessonsForInstructor, useInstructorWeekStats, type Lesson } from '../../../hooks/useLessons';
 import { useInstructorReferralCount } from '../../../hooks/useReferrals';
+import { useRefresh } from '../../../hooks/useRefresh';
 
 function formatTime(iso: string) {
   const d = new Date(iso);
@@ -42,6 +44,12 @@ export default function InstructorHome() {
   const { data: weekStats } = useInstructorWeekStats();
   const { data: referrals = 0 } = useInstructorReferralCount();
   const [inviteOpen, setInviteOpen] = useState(false);
+  const { refreshing, onRefresh } = useRefresh([
+    'instructor-students',
+    'lessons',
+    'instructor-week-stats',
+    'instructor-referrals',
+  ]);
 
   const stats = useMemo(() => {
     const overdue = students.filter((s) => s.balance_hours < 0).length;
@@ -57,7 +65,12 @@ export default function InstructorHome() {
 
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={['top']}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 32 }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7C75FF" />
+        }
+      >
         <View className="px-5 pt-3 pb-2 flex-row items-start justify-between">
           <View>
             <Text className="text-muted text-[11px] uppercase tracking-wider">Bonjour,</Text>
@@ -103,7 +116,9 @@ export default function InstructorHome() {
         <SectionLabel>Aujourd'hui — {todayLabel()}</SectionLabel>
         <View className="px-5 gap-1.5">
           {today.length === 0 ? (
-            <Text className="text-muted2 text-xs">Aucune séance aujourd'hui.</Text>
+            <Text className="text-muted2 text-xs">
+              Aucune séance aujourd'hui — passe au planning pour ouvrir des créneaux.
+            </Text>
           ) : (
             today.map((l: Lesson) => {
               const studentName = (l as unknown as {
@@ -147,7 +162,14 @@ export default function InstructorHome() {
         </View>
         <View className="px-5 gap-1.5">
           {students.length === 0 ? (
-            <Text className="text-muted2 text-xs">Aucun élève pour le moment.</Text>
+            <EmptyState
+              icon="👥"
+              title="Aucun élève pour le moment"
+              body="Invite ton premier élève par email pour démarrer."
+              cta="+ Inviter un élève"
+              onPress={() => setInviteOpen(true)}
+              variant="instructor"
+            />
           ) : (
             students.map((s) => {
               const tone: 'danger' | 'success' | 'neutral' =

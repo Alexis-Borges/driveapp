@@ -116,6 +116,30 @@ export function useUpdateLessonStatus() {
   });
 }
 
+export function useStudentCancelLesson() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: { id: string; scheduled_at: string }) => {
+      const hoursBefore =
+        (new Date(params.scheduled_at).getTime() - Date.now()) / (1000 * 60 * 60);
+      if (hoursBefore < 48) {
+        throw new Error(
+          'Annulation impossible : la séance est dans moins de 48h. Contacte ton moniteur.'
+        );
+      }
+      const { error } = await supabase
+        .from('lessons')
+        .update({
+          status: 'cancelled',
+          cancelled_reason: 'Annulée par l\'élève',
+        } as never)
+        .eq('id', params.id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['lessons'] }),
+  });
+}
+
 export function useUpcomingLessonForStudent() {
   const profile = useAuthStore((s) => s.profile);
   return useQuery({

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, ScrollView, Text, View } from 'react-native';
+import { Alert, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '../../../stores/authStore';
@@ -12,8 +12,10 @@ import { NextLessonCard } from '../../../components/student/NextLessonCard';
 import { FeedbackCard } from '../../../components/student/FeedbackCard';
 import { LockedRow } from '../../../components/student/LockedRow';
 import { LinkInstructorSheet } from '../../../components/student/LinkInstructorSheet';
+import { EmptyState } from '../../../components/shared/EmptyState';
 import { SectionLabel } from '../../../components/shared/SectionLabel';
 import { useStudentBalance, useStudentPackage } from '../../../hooks/useBalance';
+import { useRefresh } from '../../../hooks/useRefresh';
 import {
   useUpcomingLessonForStudent,
   useUpcomingEvaluation,
@@ -45,6 +47,13 @@ export default function StudentHome() {
   const { data: evaluation } = useUpcomingEvaluation();
   const { data: lastFeedback } = useLastFeedbackForStudent();
   const [linkOpen, setLinkOpen] = useState(false);
+  const { refreshing, onRefresh } = useRefresh([
+    'student-balance',
+    'student-package',
+    'next-lesson',
+    'eval',
+    'last-feedback',
+  ]);
 
   const owed = balance && balance.balance_hours < 0 ? Math.abs(balance.balance_hours) * HOURLY_RATE_EUR : 0;
   const totalHours = pkg?.package_total_hours ?? 0;
@@ -53,7 +62,12 @@ export default function StudentHome() {
 
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={['top']}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 32 }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#00C896" />
+        }
+      >
         <View className="px-5 pt-3 pb-2 flex-row items-start justify-between">
           <View>
             <Text className="text-muted text-[11px] uppercase tracking-wider">Bonjour,</Text>
@@ -134,9 +148,12 @@ export default function StudentHome() {
               }
             />
           ) : (
-            <Text className="text-muted2 text-xs">
-              Aucune séance à venir. Réserve depuis l'onglet Planning.
-            </Text>
+            <EmptyState
+              icon="📅"
+              title="Aucune séance à venir"
+              body="Réserve un créneau auprès de ton moniteur depuis le planning."
+              variant="student"
+            />
           )}
         </View>
 

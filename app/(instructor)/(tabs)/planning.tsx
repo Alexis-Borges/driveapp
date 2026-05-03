@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '../../../components/ui/Button';
 import { DaySelector } from '../../../components/shared/DaySelector';
@@ -7,6 +7,7 @@ import { PlanningGrid, type SlotState } from '../../../components/shared/Plannin
 import { useInstructorLessonsForDay, type Lesson } from '../../../hooks/useLessons';
 import { LessonActionSheet } from '../../../components/instructor/LessonActionSheet';
 import { CreateSlotSheet } from '../../../components/instructor/CreateSlotSheet';
+import { useRefresh } from '../../../hooks/useRefresh';
 
 const PAUSE_HOUR = 13;
 const TYPE_LABEL: Record<string, string> = {
@@ -27,6 +28,7 @@ export default function InstructorPlanning() {
   const { data: lessons = [] } = useInstructorLessonsForDay(selected);
   const [actionLesson, setActionLesson] = useState<Lesson | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const { refreshing, onRefresh } = useRefresh(['lessons']);
 
   const slots = useMemo(() => {
     const map: Record<number, SlotState> = {};
@@ -90,7 +92,12 @@ export default function InstructorPlanning() {
 
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={['top']}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 32 }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7C75FF" />
+        }
+      >
         <View className="px-5 pt-3 pb-2">
           <Text className="text-text text-xl font-bold">Planning</Text>
         </View>
