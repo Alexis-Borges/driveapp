@@ -6,6 +6,7 @@ import { AvatarPicker } from '../../../components/shared/AvatarPicker';
 import { EditProfileSheet } from '../../../components/shared/EditProfileSheet';
 import { LinkInstructorSheet } from '../../../components/student/LinkInstructorSheet';
 import { SectionLabel } from '../../../components/shared/SectionLabel';
+import { AppFooter } from '../../../components/shared/AppFooter';
 import { useAuthStore } from '../../../stores/authStore';
 import { confirmSignOut } from '../../../hooks/useAuth';
 import { useStudentPackage } from '../../../hooks/useBalance';
@@ -67,6 +68,8 @@ export default function StudentProfile() {
           ) : null}
           <Button label="Se déconnecter" onPress={confirmSignOut} variant="danger" />
         </View>
+
+        <AppFooter />
       </ScrollView>
 
       <EditProfileSheet

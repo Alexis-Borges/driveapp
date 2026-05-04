@@ -6,6 +6,7 @@ import { AvatarPicker } from '../../../components/shared/AvatarPicker';
 import { EditProfileSheet } from '../../../components/shared/EditProfileSheet';
 import { StripeConnectCard } from '../../../components/instructor/StripeConnectCard';
 import { SectionLabel } from '../../../components/shared/SectionLabel';
+import { AppFooter } from '../../../components/shared/AppFooter';
 import { useAuthStore } from '../../../stores/authStore';
 import { confirmSignOut } from '../../../hooks/useAuth';
 
@@ -57,6 +58,8 @@ export default function InstructorProfile() {
         <View className="px-5 mt-2">
           <Button label="Se déconnecter" onPress={confirmSignOut} variant="danger" />
         </View>
+
+        <AppFooter />
       </ScrollView>
 
       <EditProfileSheet

@@ -1,7 +1,7 @@
-import { Pressable, Text, View } from 'react-native';
+import { Alert, Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { useThreadList } from '../../../hooks/useMessages';
+import { useMarkUnread, useThreadList } from '../../../hooks/useMessages';
 
 function formatTime(iso: string) {
   const d = new Date(iso);
@@ -15,6 +15,19 @@ function formatTime(iso: string) {
 export default function InstructorMessages() {
   const router = useRouter();
   const { data: threads = [] } = useThreadList();
+  const markUnread = useMarkUnread();
+
+  function onLongPressThread(otherId: string, unread: number) {
+    if (unread > 0) return;
+    Alert.alert(
+      'Marquer comme non lu ?',
+      'Tu pourras revenir relire cette conversation plus tard.',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        { text: 'Marquer non lu', onPress: () => markUnread.mutate(otherId) },
+      ]
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={['top']}>
@@ -36,6 +49,8 @@ export default function InstructorMessages() {
             <Pressable
               key={t.other_id}
               onPress={() => router.push(`/(instructor)/chat/${t.other_id}`)}
+              onLongPress={() => onLongPressThread(t.other_id, t.unread)}
+              delayLongPress={400}
               className="px-5 py-3 flex-row items-center gap-3 border-b border-border"
             >
               <View className="w-9 h-9 rounded-full bg-card2 items-center justify-center relative">

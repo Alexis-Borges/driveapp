@@ -12,9 +12,17 @@ type Props = {
   packLabel: string;
   hours: number;
   amountEur: number;
+  instructorVerified?: boolean;
 };
 
-export function PaymentSheet({ visible, onClose, packLabel, hours, amountEur }: Props) {
+export function PaymentSheet({
+  visible,
+  onClose,
+  packLabel,
+  hours,
+  amountEur,
+  instructorVerified = true,
+}: Props) {
   const [plan, setPlan] = useState<Plan>('one_shot');
   const checkout = useStripeCheckout();
 
@@ -62,11 +70,22 @@ export function PaymentSheet({ visible, onClose, packLabel, hours, amountEur }: 
         <Text className="text-student text-base font-bold">{Math.round(amountEur / 3)}€</Text>
       </Pressable>
 
+      {!instructorVerified ? (
+        <View className="bg-warning/10 border border-warning/25 rounded-2xl px-3 py-2.5 mb-3">
+          <Text className="text-warning text-xs font-bold">Paiement indisponible</Text>
+          <Text className="text-muted text-[11px] mt-0.5 leading-4">
+            Ton moniteur n'a pas encore activé Stripe. Demande-lui de finaliser
+            son onboarding pour pouvoir payer en ligne.
+          </Text>
+        </View>
+      ) : null}
+
       <Button
         label="💳 Procéder au paiement"
         variant="student"
         onPress={pay}
         loading={checkout.isPending}
+        disabled={!instructorVerified}
       />
     </BottomSheet>
   );

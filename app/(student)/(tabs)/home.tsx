@@ -17,6 +17,9 @@ import { Checklist } from '../../../components/shared/Checklist';
 import { SectionLabel } from '../../../components/shared/SectionLabel';
 import { useStudentBalance, useStudentPackage } from '../../../hooks/useBalance';
 import { useRefresh } from '../../../hooks/useRefresh';
+import { useLinkedInstructorStripe } from '../../../hooks/useStripeConnect';
+import { ProfileCompletenessBanner } from '../../../components/shared/ProfileCompletenessBanner';
+import { SkeletonCard } from '../../../components/shared/Skeleton';
 import {
   useUpcomingLessonForStudent,
   useUpcomingEvaluation,
@@ -44,9 +47,11 @@ export default function StudentHome() {
   const router = useRouter();
   const { data: balance } = useStudentBalance();
   const { data: pkg } = useStudentPackage();
-  const { data: nextLesson } = useUpcomingLessonForStudent();
+  const { data: nextLesson, isLoading: nextLoading } = useUpcomingLessonForStudent();
   const { data: evaluation } = useUpcomingEvaluation();
-  const { data: lastFeedback } = useLastFeedbackForStudent();
+  const { data: lastFeedback, isLoading: feedbackLoading } = useLastFeedbackForStudent();
+  const { data: instructorStripe } = useLinkedInstructorStripe(pkg?.instructor_id ?? null);
+  const instructorVerified = !!instructorStripe?.is_verified;
   const [linkOpen, setLinkOpen] = useState(false);
   const { refreshing, onRefresh } = useRefresh([
     'student-balance',
@@ -112,10 +117,21 @@ export default function StudentHome() {
           variant="student"
         />
 
+        <ProfileCompletenessBanner
+          variant="student"
+          onPress={() => router.push('/(student)/profile')}
+        />
+
         {owed > 0 ? (
           <PaymentBanner
             amountEuros={owed}
             onPay={() => router.push('/(student)/shop')}
+            disabled={!!pkg?.instructor_id && !instructorVerified}
+            disabledReason={
+              pkg?.instructor_id && !instructorVerified
+                ? 'Ton moniteur doit activer Stripe pour recevoir les paiements.'
+                : undefined
+            }
           />
         ) : null}
 
@@ -154,7 +170,9 @@ export default function StudentHome() {
 
         <SectionLabel>Prochain rendez-vous</SectionLabel>
         <View className="px-5">
-          {nextLesson ? (
+          {nextLoading ? (
+            <SkeletonCard height={64} />
+          ) : nextLesson ? (
             <NextLessonCard
               number={1}
               type={TYPE_LABEL[(nextLesson as { type: string }).type] ?? 'Séance'}
@@ -175,7 +193,9 @@ export default function StudentHome() {
         </View>
 
         <SectionLabel>Dernier retour</SectionLabel>
-        {lastFeedback ? (
+        {feedbackLoading ? (
+          <SkeletonCard height={92} />
+        ) : lastFeedback ? (
           <FeedbackCard
             author="Monitrice"
             date={new Date(lastFeedback.scheduled_at).toLocaleDateString('fr-FR', {
@@ -185,6 +205,8 @@ export default function StudentHome() {
             })}
             body={lastFeedback.feedback}
             rating={lastFeedback.rating ?? 0}
+            lessonId={lastFeedback.id}
+            studentComment={lastFeedback.student_comment ?? null}
           />
         ) : (
           <FeedbackCard

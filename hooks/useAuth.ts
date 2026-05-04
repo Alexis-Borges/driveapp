@@ -3,6 +3,9 @@ import { Alert } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../stores/authStore';
 
+let userInitiatedSignOut = false;
+let hadSession = false;
+
 export function useAuthBootstrap() {
   const { setSession, setProfile, setLoading } = useAuthStore();
 
@@ -21,15 +24,25 @@ export function useAuthBootstrap() {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!mounted) return;
       setSession(session);
+      hadSession = !!session;
       if (session?.user) await loadProfile(session.user.id);
       setLoading(false);
     });
 
-    const { data: sub } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: sub } = supabase.auth.onAuthStateChange(async (event, session) => {
       setSession(session);
       if (session?.user) {
+        hadSession = true;
         await loadProfile(session.user.id);
       } else {
+        if (event === 'SIGNED_OUT' && hadSession && !userInitiatedSignOut) {
+          Alert.alert(
+            'Session expirée',
+            'Ta session a expiré. Reconnecte-toi pour continuer.'
+          );
+        }
+        userInitiatedSignOut = false;
+        hadSession = false;
         setProfile(null);
       }
     });
@@ -42,6 +55,7 @@ export function useAuthBootstrap() {
 }
 
 export async function signOut() {
+  userInitiatedSignOut = true;
   await supabase.auth.signOut();
 }
 

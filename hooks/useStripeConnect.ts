@@ -34,3 +34,19 @@ export function useStripeConnectOnboarding() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['instructor-stripe'] }),
   });
 }
+
+export function useLinkedInstructorStripe(instructorId: string | null) {
+  return useQuery({
+    queryKey: ['linked-instructor-stripe', instructorId],
+    enabled: !!instructorId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('instructors')
+        .select('is_verified')
+        .eq('id', instructorId!)
+        .maybeSingle();
+      if (error) throw error;
+      return data as { is_verified: boolean } | null;
+    },
+  });
+}
