@@ -140,3 +140,29 @@ export function useMarkRead(otherId: string | null) {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['threads'] }),
   });
 }
+
+export function useMarkUnread() {
+  const profile = useAuthStore((s) => s.profile);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (otherId: string) => {
+      if (!profile) return;
+      const { data: latest } = await supabase
+        .from('messages')
+        .select('id')
+        .eq('sender_id', otherId)
+        .eq('recipient_id', profile.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      const id = (latest as { id: string } | null)?.id;
+      if (!id) return;
+      const { error } = await supabase
+        .from('messages')
+        .update({ read_at: null } as never)
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['threads'] }),
+  });
+}

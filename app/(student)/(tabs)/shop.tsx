@@ -6,6 +6,7 @@ import { PaymentSheet } from '../../../components/student/PaymentSheet';
 import { SectionLabel } from '../../../components/shared/SectionLabel';
 import { useStudentPackage } from '../../../hooks/useBalance';
 import { useReferralStats } from '../../../hooks/useReferrals';
+import { useLinkedInstructorStripe } from '../../../hooks/useStripeConnect';
 
 type Pack = {
   hours: number;
@@ -50,6 +51,8 @@ const PACKS: Pack[] = [
 export default function StudentShop() {
   const { data: pkg } = useStudentPackage();
   const { data: refStats } = useReferralStats();
+  const { data: instructorStripe } = useLinkedInstructorStripe(pkg?.instructor_id ?? null);
+  const instructorVerified = !!instructorStripe?.is_verified;
   const [selected, setSelected] = useState<Pack | null>(null);
 
   return (
@@ -110,6 +113,7 @@ export default function StudentShop() {
           packLabel={`${selected.title} — ${selected.subtitle}`}
           hours={selected.hours}
           amountEur={selected.price}
+          instructorVerified={instructorVerified}
         />
       ) : null}
     </SafeAreaView>

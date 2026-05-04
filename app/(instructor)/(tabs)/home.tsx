@@ -13,6 +13,7 @@ import { SectionLabel } from '../../../components/shared/SectionLabel';
 import { InviteStudentSheet } from '../../../components/instructor/InviteStudentSheet';
 import { EmptyState } from '../../../components/shared/EmptyState';
 import { Checklist, type ChecklistItem } from '../../../components/shared/Checklist';
+import { ProfileCompletenessBanner } from '../../../components/shared/ProfileCompletenessBanner';
 import { useInstructorStripeStatus, useStripeConnectOnboarding } from '../../../hooks/useStripeConnect';
 import { useInstructorStudents } from '../../../hooks/useStudents';
 import { SkeletonCard } from '../../../components/shared/Skeleton';
@@ -125,6 +126,10 @@ export default function InstructorHome() {
         </View>
 
         <Checklist items={checklist} variant="instructor" />
+        <ProfileCompletenessBanner
+          variant="instructor"
+          onPress={() => router.push('/(instructor)/profile')}
+        />
 
         {overdueStudents.length > 0 ? (
           <>

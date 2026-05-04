@@ -110,10 +110,14 @@ export function useBookSlot() {
 export function useUpdateLessonStatus() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (params: { id: string; status: LessonStatus }) => {
+    mutationFn: async (params: { id: string; status: LessonStatus; cancelled_reason?: string }) => {
+      const update: Record<string, unknown> = { status: params.status };
+      if (params.cancelled_reason !== undefined) {
+        update.cancelled_reason = params.cancelled_reason;
+      }
       const { error } = await supabase
         .from('lessons')
-        .update({ status: params.status } as never)
+        .update(update as never)
         .eq('id', params.id);
       if (error) throw error;
     },
@@ -227,7 +231,7 @@ export function useLastFeedbackForStudent() {
     queryFn: async () => {
       const { data } = await supabase
         .from('lessons')
-        .select('id, scheduled_at, feedback, rating, instructor_id')
+        .select('id, scheduled_at, feedback, rating, instructor_id, student_comment')
         .eq('student_id', profile!.id)
         .eq('status', 'completed')
         .not('feedback', 'is', null)
@@ -240,7 +244,25 @@ export function useLastFeedbackForStudent() {
         feedback: string;
         rating: number | null;
         instructor_id: string;
+        student_comment: string | null;
       } | null;
+    },
+  });
+}
+
+export function useUpdateStudentComment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: { id: string; comment: string }) => {
+      const { error } = await supabase
+        .from('lessons')
+        .update({ student_comment: params.comment.trim() || null } as never)
+        .eq('id', params.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['last-feedback'] });
+      qc.invalidateQueries({ queryKey: ['lessons'] });
     },
   });
 }
