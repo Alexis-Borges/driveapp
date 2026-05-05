@@ -35,18 +35,34 @@ export function useStripeConnectOnboarding() {
   });
 }
 
-export function useLinkedInstructorStripe(instructorId: string | null) {
+export function useLinkedInstructorInfo(instructorId: string | null) {
   return useQuery({
-    queryKey: ['linked-instructor-stripe', instructorId],
+    queryKey: ['linked-instructor-info', instructorId],
     enabled: !!instructorId,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('instructors')
-        .select('is_verified')
-        .eq('id', instructorId!)
-        .maybeSingle();
-      if (error) throw error;
-      return data as { is_verified: boolean } | null;
+      const [instrRes, profRes] = await Promise.all([
+        supabase
+          .from('instructors')
+          .select('is_verified, hourly_rate')
+          .eq('id', instructorId!)
+          .maybeSingle(),
+        supabase
+          .from('profiles')
+          .select('first_name, last_name')
+          .eq('id', instructorId!)
+          .maybeSingle(),
+      ]);
+      if (instrRes.error) throw instrRes.error;
+      if (profRes.error) throw profRes.error;
+      const instr = instrRes.data as { is_verified: boolean; hourly_rate: number } | null;
+      const prof = profRes.data as { first_name: string; last_name: string } | null;
+      return {
+        is_verified: !!instr?.is_verified,
+        hourly_rate: instr?.hourly_rate ?? 30,
+        first_name: prof?.first_name ?? '',
+        last_name: prof?.last_name ?? '',
+        full_name: prof ? `${prof.first_name} ${prof.last_name[0] ?? ''}.` : 'Moniteur',
+      };
     },
   });
 }

@@ -20,6 +20,7 @@ import { SkeletonCard } from '../../../components/shared/Skeleton';
 import { useTodayLessonsForInstructor, useInstructorWeekStats, type Lesson } from '../../../hooks/useLessons';
 import { useInstructorReferralCount } from '../../../hooks/useReferrals';
 import { useRefresh } from '../../../hooks/useRefresh';
+import { useRealtimeLessons } from '../../../hooks/useRealtimeLessons';
 
 function formatTime(iso: string) {
   const d = new Date(iso);
@@ -43,6 +44,7 @@ const TYPE_LABEL: Record<string, string> = {
 export default function InstructorHome() {
   const profile = useAuthStore((s) => s.profile);
   const router = useRouter();
+  useRealtimeLessons();
   const { data: students = [], isLoading: studentsLoading } = useInstructorStudents();
   const { data: today = [], isLoading: todayLoading } = useTodayLessonsForInstructor();
   const { data: weekStats } = useInstructorWeekStats();

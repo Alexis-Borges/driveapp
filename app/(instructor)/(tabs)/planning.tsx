@@ -8,6 +8,7 @@ import { useInstructorLessonsForDay, type Lesson } from '../../../hooks/useLesso
 import { LessonActionSheet } from '../../../components/instructor/LessonActionSheet';
 import { CreateSlotSheet } from '../../../components/instructor/CreateSlotSheet';
 import { useRefresh } from '../../../hooks/useRefresh';
+import { useRealtimeLessons } from '../../../hooks/useRealtimeLessons';
 
 const PAUSE_HOUR = 13;
 const TYPE_LABEL: Record<string, string> = {
@@ -20,6 +21,7 @@ const TYPE_LABEL: Record<string, string> = {
 };
 
 export default function InstructorPlanning() {
+  useRealtimeLessons();
   const [selected, setSelected] = useState(() => {
     const d = new Date();
     d.setHours(0, 0, 0, 0);

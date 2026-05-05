@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { Alert, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import * as Clipboard from 'expo-clipboard';
 import { PackCard } from '../../../components/student/PackCard';
 import { PaymentSheet } from '../../../components/student/PaymentSheet';
 import { SectionLabel } from '../../../components/shared/SectionLabel';
 import { useStudentPackage } from '../../../hooks/useBalance';
 import { useReferralStats } from '../../../hooks/useReferrals';
-import { useLinkedInstructorStripe } from '../../../hooks/useStripeConnect';
+import { useLinkedInstructorInfo } from '../../../hooks/useStripeConnect';
 
 type Pack = {
   hours: number;
@@ -51,8 +52,8 @@ const PACKS: Pack[] = [
 export default function StudentShop() {
   const { data: pkg } = useStudentPackage();
   const { data: refStats } = useReferralStats();
-  const { data: instructorStripe } = useLinkedInstructorStripe(pkg?.instructor_id ?? null);
-  const instructorVerified = !!instructorStripe?.is_verified;
+  const { data: instructorInfo } = useLinkedInstructorInfo(pkg?.instructor_id ?? null);
+  const instructorVerified = !!instructorInfo?.is_verified;
   const [selected, setSelected] = useState<Pack | null>(null);
 
   return (
@@ -87,9 +88,12 @@ export default function StudentShop() {
               {pkg?.referral_code ?? '—'}
             </Text>
             <Text
-              onPress={() =>
-                Alert.alert('Copié', `Code ${pkg?.referral_code ?? ''} copié dans le presse-papiers (stub)`)
-              }
+              onPress={async () => {
+                const code = pkg?.referral_code ?? '';
+                if (!code) return;
+                await Clipboard.setStringAsync(code);
+                Alert.alert('Copié', `Code ${code} copié dans le presse-papiers.`);
+              }}
               className="bg-student rounded-md px-3 py-1 text-[11px] font-bold text-[#0a1a14]"
             >
               Copier

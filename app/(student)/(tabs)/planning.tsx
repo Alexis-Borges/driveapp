@@ -8,6 +8,7 @@ import { useStudentLessonsForDay, useBookSlot, useStudentCancelLesson, type Less
 import { useStudentBalance, useStudentPackage } from '../../../hooks/useBalance';
 import { useAuthStore } from '../../../stores/authStore';
 import { useRefresh } from '../../../hooks/useRefresh';
+import { useRealtimeLessons, useRealtimeInstructorSlots } from '../../../hooks/useRealtimeLessons';
 
 const PAUSE_HOUR = 13;
 const TYPE_LABEL: Record<string, string> = {
@@ -23,6 +24,8 @@ export default function StudentPlanning() {
   const profile = useAuthStore((s) => s.profile);
   const { data: pkg } = useStudentPackage();
   const { data: balance } = useStudentBalance();
+  useRealtimeLessons();
+  useRealtimeInstructorSlots(pkg?.instructor_id ?? null);
   const [selected, setSelected] = useState(() => {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
