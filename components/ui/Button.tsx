@@ -22,6 +22,9 @@ export function Button({ label, onPress, variant = 'instructor', loading, disabl
   const isDisabled = disabled || loading;
   return (
     <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ disabled: isDisabled, busy: loading }}
       onPress={onPress}
       disabled={isDisabled}
       className={`${s.bg} rounded-2xl py-3 px-5 items-center justify-center ${isDisabled ? 'opacity-60' : ''}`}

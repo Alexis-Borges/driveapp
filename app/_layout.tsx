@@ -17,6 +17,9 @@ import { DMMono_400Regular } from '@expo-google-fonts/dm-mono';
 import { useAuthBootstrap } from '../hooks/useAuth';
 import { useAuthStore } from '../stores/authStore';
 import { usePushRegistration } from '../hooks/usePushNotifications';
+import { identify, initObservability, reset as resetObservability } from '../lib/observability';
+
+initObservability();
 
 const queryClient = new QueryClient();
 
@@ -30,13 +33,23 @@ function RootNav() {
   useEffect(() => {
     if (loading) return;
     const inAuth = segments[0] === '(auth)';
+    const inLegal = segments[0] === 'legal';
 
     if (!session) {
-      if (!inAuth) router.replace('/(auth)/login');
+      resetObservability();
+      if (!inAuth && !inLegal) router.replace('/(auth)/login');
+      return;
+    }
+    if (session.user.id) identify(session.user.id, { role: profile?.role });
+    // Email non vérifié → on bloque sur l'écran "verify"
+    if (!session.user.email_confirmed_at && segments[1] !== 'verify') {
+      router.replace('/(auth)/verify');
       return;
     }
     if (!profile) return; // wait for profile fetch
-    if (profile.role === 'instructor' && segments[0] !== '(instructor)') {
+    if (profile.role === 'admin' && segments[0] !== '(admin)') {
+      router.replace('/(admin)/home');
+    } else if (profile.role === 'instructor' && segments[0] !== '(instructor)') {
       router.replace('/(instructor)/home');
     } else if (profile.role === 'student' && segments[0] !== '(student)') {
       router.replace('/(student)/home');
@@ -56,6 +69,8 @@ function RootNav() {
       <Stack.Screen name="(auth)" />
       <Stack.Screen name="(instructor)" />
       <Stack.Screen name="(student)" />
+      <Stack.Screen name="(admin)" />
+      <Stack.Screen name="legal" />
     </Stack>
   );
 }

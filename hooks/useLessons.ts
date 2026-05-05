@@ -69,7 +69,11 @@ export function useCreateSlot() {
   const profile = useAuthStore((s) => s.profile);
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (params: { scheduled_at: string; type?: LessonType }) => {
+    mutationFn: async (params: {
+      scheduled_at: string;
+      type?: LessonType;
+      pickup_address?: string;
+    }) => {
       if (!profile) throw new Error('Not authenticated');
       const { error } = await supabase.from('lessons').insert({
         instructor_id: profile.id,
@@ -78,6 +82,7 @@ export function useCreateSlot() {
         duration_minutes: 60,
         type: params.type ?? 'city',
         status: 'pending',
+        pickup_address: params.pickup_address ?? null,
       } as never);
       if (error) {
         if (error.code === '23505') {

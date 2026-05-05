@@ -7,6 +7,7 @@ import { PlanningGrid, type SlotState } from '../../../components/shared/Plannin
 import { useInstructorLessonsForDay, type Lesson } from '../../../hooks/useLessons';
 import { LessonActionSheet } from '../../../components/instructor/LessonActionSheet';
 import { CreateSlotSheet } from '../../../components/instructor/CreateSlotSheet';
+import { WeekView } from '../../../components/instructor/WeekView';
 import { useRefresh } from '../../../hooks/useRefresh';
 import { useRealtimeLessons } from '../../../hooks/useRealtimeLessons';
 
@@ -27,10 +28,11 @@ export default function InstructorPlanning() {
     d.setHours(0, 0, 0, 0);
     return d;
   });
+  const [view, setView] = useState<'day' | 'week'>('day');
   const { data: lessons = [] } = useInstructorLessonsForDay(selected);
   const [actionLesson, setActionLesson] = useState<Lesson | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
-  const { refreshing, onRefresh } = useRefresh(['lessons']);
+  const { refreshing, onRefresh } = useRefresh(['lessons', 'week-view']);
 
   const slots = useMemo(() => {
     const map: Record<number, SlotState> = {};
@@ -100,53 +102,81 @@ export default function InstructorPlanning() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7C75FF" />
         }
       >
-        <View className="px-5 pt-3 pb-2">
+        <View className="px-5 pt-3 pb-2 flex-row items-center justify-between">
           <Text className="text-text text-xl font-bold">Planning</Text>
-        </View>
-
-        <View className="px-5 pb-2.5 flex-row items-center justify-between">
-          <Pressable
-            onPress={() => shiftDay(-1)}
-            className="w-8 h-8 rounded-lg bg-card border border-border items-center justify-center"
-          >
-            <Text className="text-muted text-base">‹</Text>
-          </Pressable>
-          <Text className="text-text text-sm font-bold">
-            {selected.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
-          </Text>
-          <Pressable
-            onPress={() => shiftDay(1)}
-            className="w-8 h-8 rounded-lg bg-card border border-border items-center justify-center"
-          >
-            <Text className="text-muted text-base">›</Text>
-          </Pressable>
-        </View>
-
-        <DaySelector selected={selected} onSelect={setSelected} variant="instructor" />
-
-        <View className="mx-5 my-2.5 bg-card border border-border rounded-2xl px-3 py-2.5 flex-row justify-between">
-          <View>
-            <Text className="text-muted2 text-[9px] uppercase tracking-wider">Créneaux libres</Text>
-            <Text className="text-student text-base font-bold mt-0.5">
-              {stats.free} / {stats.total}
-            </Text>
-          </View>
-          <View>
-            <Text className="text-muted2 text-[9px] uppercase tracking-wider text-right">Remplissage</Text>
-            <Text className="text-warning text-base font-bold mt-0.5 text-right">{stats.pct}%</Text>
+          <View className="flex-row bg-card border border-border rounded-xl p-0.5">
+            <Pressable
+              onPress={() => setView('day')}
+              className={`px-3 py-1 rounded-lg ${view === 'day' ? 'bg-instructor' : ''}`}
+            >
+              <Text className={`text-[11px] font-bold ${view === 'day' ? 'text-white' : 'text-muted'}`}>
+                Jour
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={() => setView('week')}
+              className={`px-3 py-1 rounded-lg ${view === 'week' ? 'bg-instructor' : ''}`}
+            >
+              <Text className={`text-[11px] font-bold ${view === 'week' ? 'text-white' : 'text-muted'}`}>
+                Semaine
+              </Text>
+            </Pressable>
           </View>
         </View>
 
-        <PlanningGrid
-          slots={slots}
-          variant="instructor"
-          onPressBooked={(hour) => {
-            const l = (lessons as Lesson[]).find(
-              (x) => new Date(x.scheduled_at).getHours() === hour
-            );
-            if (l) setActionLesson(l);
-          }}
-        />
+        {view === 'week' ? (
+          <View className="px-3 mt-2 mb-3">
+            <WeekView weekStart={selected} onPressLesson={setActionLesson} />
+          </View>
+        ) : null}
+
+        {view === 'day' ? (
+          <>
+            <View className="px-5 pb-2.5 flex-row items-center justify-between">
+              <Pressable
+                onPress={() => shiftDay(-1)}
+                className="w-8 h-8 rounded-lg bg-card border border-border items-center justify-center"
+              >
+                <Text className="text-muted text-base">‹</Text>
+              </Pressable>
+              <Text className="text-text text-sm font-bold">
+                {selected.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+              </Text>
+              <Pressable
+                onPress={() => shiftDay(1)}
+                className="w-8 h-8 rounded-lg bg-card border border-border items-center justify-center"
+              >
+                <Text className="text-muted text-base">›</Text>
+              </Pressable>
+            </View>
+
+            <DaySelector selected={selected} onSelect={setSelected} variant="instructor" />
+
+            <View className="mx-5 my-2.5 bg-card border border-border rounded-2xl px-3 py-2.5 flex-row justify-between">
+              <View>
+                <Text className="text-muted2 text-[9px] uppercase tracking-wider">Créneaux libres</Text>
+                <Text className="text-student text-base font-bold mt-0.5">
+                  {stats.free} / {stats.total}
+                </Text>
+              </View>
+              <View>
+                <Text className="text-muted2 text-[9px] uppercase tracking-wider text-right">Remplissage</Text>
+                <Text className="text-warning text-base font-bold mt-0.5 text-right">{stats.pct}%</Text>
+              </View>
+            </View>
+
+            <PlanningGrid
+              slots={slots}
+              variant="instructor"
+              onPressBooked={(hour) => {
+                const l = (lessons as Lesson[]).find(
+                  (x) => new Date(x.scheduled_at).getHours() === hour
+                );
+                if (l) setActionLesson(l);
+              }}
+            />
+          </>
+        ) : null}
 
         <View className="px-5 pt-3.5">
           <Button

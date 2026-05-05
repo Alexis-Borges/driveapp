@@ -11,6 +11,12 @@ import { Badge } from '../../../components/ui/Badge';
 import { Button } from '../../../components/ui/Button';
 import { ProgressBar } from '../../../components/student/ProgressBar';
 import { SectionLabel } from '../../../components/shared/SectionLabel';
+import { CompetencesList } from '../../../components/shared/CompetencesList';
+import {
+  useCompetencesCatalog,
+  useStudentCompetences,
+  useUpdateCompetence,
+} from '../../../hooks/useCompetences';
 
 type StudentDetail = {
   id: string;
@@ -109,6 +115,10 @@ export default function StudentDetail() {
     },
   });
 
+  const { data: competencesCatalog = [] } = useCompetencesCatalog();
+  const { data: competencesStates = [] } = useStudentCompetences(id);
+  const updateCompetence = useUpdateCompetence();
+
   const { data: lessons = [] } = useQuery({
     queryKey: ['student-lessons-recent', id],
     enabled: !!id,
@@ -191,6 +201,19 @@ export default function StudentDetail() {
             onPress={() => setEvalOpen(true)}
           />
         </View>
+
+        <SectionLabel>Compétences (REMC)</SectionLabel>
+        <Text className="text-muted2 text-[10px] px-5 mb-2">
+          Tape sur une compétence pour faire défiler son état.
+        </Text>
+        <CompetencesList
+          catalog={competencesCatalog}
+          states={competencesStates}
+          editable
+          onChange={(competence_id, status) =>
+            updateCompetence.mutate({ student_id: id!, competence_id, status })
+          }
+        />
 
         <SectionLabel>Paiements ({payments.length})</SectionLabel>
         {payments.length === 0 ? (

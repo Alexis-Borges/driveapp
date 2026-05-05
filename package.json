@@ -7,11 +7,13 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
+    "test": "jest",
+    "typecheck": "tsc --noEmit",
     "build:dev": "eas build --profile development --platform all",
     "build:preview": "eas build --profile preview --platform android",
     "build:prod": "eas build --profile production --platform all",
     "supabase:types": "supabase gen types typescript --project-id gaqivtanxcqcekfdzlfk > types/database.ts",
-    "supabase:deploy:fns": "supabase functions deploy create-payment-intent stripe-webhook stripe-connect-onboard auto-cancel-48h lesson-reminders send-push"
+    "supabase:deploy:fns": "supabase functions deploy create-payment-intent stripe-webhook stripe-connect-onboard auto-cancel-48h lesson-reminders send-push admin-refund rgpd-export rgpd-delete invoice-pdf generate-recurring-slots"
   },
   "dependencies": {
     "@expo-google-fonts/dm-mono": "^0.4.2",
@@ -25,6 +27,8 @@
     "expo-clipboard": "~8.0.7",
     "expo-constants": "~18.0.13",
     "expo-device": "~8.0.7",
+    "@sentry/react-native": "~6.10.0",
+    "posthog-react-native": "~3.7.0",
     "expo-font": "^55.0.6",
     "expo-image-picker": "~17.0.7",
     "expo-linking": "~8.0.12",
@@ -47,6 +51,9 @@
   },
   "devDependencies": {
     "@types/react": "~19.1.0",
+    "@types/jest": "^30.0.0",
+    "jest": "^30.0.0",
+    "jest-expo": "~54.0.0",
     "typescript": "~5.9.2"
   },
   "private": true

@@ -12,6 +12,7 @@ export function TextField({ label, error, ...props }: Props) {
         {label}
       </Text>
       <TextInput
+        accessibilityLabel={label}
         placeholderTextColor="#454B57"
         className="bg-card border border-border rounded-2xl px-4 py-3 text-text"
         {...props}
