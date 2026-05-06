@@ -1,5 +1,6 @@
 import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 import { Button } from '../../components/ui/Button';
@@ -8,6 +9,17 @@ import { SectionLabel } from '../../components/shared/SectionLabel';
 import { AppFooter } from '../../components/shared/AppFooter';
 
 export default function AdminHome() {
+  const router = useRouter();
+  const { data: pending = 0 } = useQuery({
+    queryKey: ['admin-pending-instructors'],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from('instructors')
+        .select('id', { count: 'exact', head: true })
+        .eq('is_verified', false);
+      return count ?? 0;
+    },
+  });
   const { data: stats } = useQuery({
     queryKey: ['admin-stats'],
     queryFn: async () => {
@@ -89,6 +101,27 @@ export default function AdminHome() {
           <Stat label="Paiements OK" value={String(stats?.payments ?? '—')} />
           <Stat label="CA (€)" value={String(stats?.revenueEur ?? '—')} />
         </View>
+
+        <SectionLabel>Modération</SectionLabel>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Validation moniteurs"
+          onPress={() => router.push('/(admin)/instructors')}
+          className="mx-5 mb-2 bg-card border border-border rounded-2xl px-3 py-3 flex-row justify-between items-center"
+        >
+          <View className="flex-1">
+            <Text className="text-text text-sm font-bold">🛡 Validation moniteurs</Text>
+            <Text className="text-muted2 text-[10px] mt-0.5">
+              Vérifier l'agrément avant activation
+            </Text>
+          </View>
+          {pending > 0 ? (
+            <View className="bg-warning/20 px-2.5 py-1 rounded-full mr-2">
+              <Text className="text-warning text-[11px] font-bold">{pending}</Text>
+            </View>
+          ) : null}
+          <Text className="text-muted2 text-base">›</Text>
+        </Pressable>
 
         <SectionLabel>Derniers paiements</SectionLabel>
         {lastPayments.map((p) => (

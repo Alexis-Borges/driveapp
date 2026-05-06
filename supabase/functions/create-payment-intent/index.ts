@@ -69,13 +69,25 @@ Deno.serve(async (req) => {
       amount,
       currency: 'eur',
       customer: customer.id,
-      automatic_payment_methods: { enabled: true },
       metadata: {
         student_id: userId,
         hours: String(hours),
         plan,
       },
     };
+    if (plan === 'three_x') {
+      // Klarna "Pay in 3" sur le marché FR : split automatique en 3 mensualités
+      // sans frais pour l'élève. Nécessite l'activation Klarna dans le
+      // dashboard Stripe (Settings → Payment methods).
+      intentParams.payment_method_types = ['klarna'];
+      intentParams.payment_method_options = {
+        klarna: {
+          preferred_locale: 'fr-FR',
+        },
+      };
+    } else {
+      intentParams.automatic_payment_methods = { enabled: true };
+    }
     if (instr?.stripe_account_id) {
       intentParams.application_fee_amount = fee;
       intentParams.transfer_data = { destination: instr.stripe_account_id };

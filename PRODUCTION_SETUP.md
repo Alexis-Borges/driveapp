@@ -81,6 +81,22 @@ Déploie : `create-payment-intent`, `stripe-webhook`, `stripe-connect-onboard`,
 
 ## 5. Stripe
 
+### Activation du 3× sans frais (Klarna)
+Le code utilise **Klarna Pay-in-3** (split natif en 3 mensualités sans frais
+côté client) quand l'élève choisit `3× sans frais`.
+
+Étapes obligatoires côté Stripe Dashboard :
+1. Settings → Payment methods → activer **Klarna**
+2. Accepter les conditions Klarna pour la France
+3. Vérifier que le compte Connect du moniteur supporte aussi Klarna
+   (sinon le paiement échouera avec une erreur "payment method not available")
+
+Tant que Klarna n'est pas activé, le bouton 3× tombe en erreur "method not
+available". Pour basculer en mode dégradé, modifier
+`supabase/functions/create-payment-intent/index.ts` et retirer le bloc
+`if (plan === 'three_x')`.
+
+### Webhook
 - Créer le webhook prod : `https://xxx.supabase.co/functions/v1/stripe-webhook`
   (events : `payment_intent.succeeded`, `payment_intent.payment_failed`,
   `account.updated`).
