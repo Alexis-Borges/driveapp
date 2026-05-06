@@ -11,6 +11,7 @@ import { AppFooter } from '../../../components/shared/AppFooter';
 import { RgpdSection } from '../../../components/shared/RgpdSection';
 import { useAuthStore } from '../../../stores/authStore';
 import { confirmSignOut } from '../../../hooks/useAuth';
+import { useInstructorSelf } from '../../../hooks/useInstructorSelf';
 
 function Field({ label, value, locked }: { label: string; value: string; locked?: boolean }) {
   return (
@@ -42,8 +43,14 @@ function NavRow({ label, emoji, onPress }: { label: string; emoji: string; onPre
 
 export default function InstructorProfile() {
   const profile = useAuthStore((s) => s.profile);
+  const { data: instr } = useInstructorSelf();
   const router = useRouter();
   const [editOpen, setEditOpen] = useState(false);
+
+  const bioParts: string[] = ['Monitrice agréée'];
+  if (instr?.experience_years) bioParts.push(`${instr.experience_years} ans d'exp.`);
+  if (instr?.zone_geo) bioParts.push(instr.zone_geo);
+  const bioLine = bioParts.join(' · ');
 
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={['top']}>
@@ -53,7 +60,7 @@ export default function InstructorProfile() {
           <Text className="text-text text-lg font-bold">
             {profile?.first_name} {profile?.last_name}
           </Text>
-          <Text className="text-muted text-xs">Monitrice de conduite</Text>
+          <Text className="text-muted text-xs">{bioLine}</Text>
         </View>
 
         <SectionLabel>Paiements</SectionLabel>
@@ -78,6 +85,16 @@ export default function InstructorProfile() {
         <Field label="Email" value={profile?.email ?? ''} locked />
         <Pressable onPress={() => setEditOpen(true)}>
           <Field label="Téléphone" value={profile?.phone ?? ''} />
+        </Pressable>
+        <Field label="N° Agrément" value={instr?.agreement_number ?? ''} locked />
+        <Pressable onPress={() => setEditOpen(true)}>
+          <Field
+            label="Années d'expérience"
+            value={instr?.experience_years ? `${instr.experience_years} ans` : ''}
+          />
+        </Pressable>
+        <Pressable onPress={() => setEditOpen(true)}>
+          <Field label="Zone géographique" value={instr?.zone_geo ?? ''} />
         </Pressable>
         <Pressable onPress={() => setEditOpen(true)}>
           <Field label="Description" value={profile?.bio ?? ''} />

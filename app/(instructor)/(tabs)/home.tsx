@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { Alert, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '../../../stores/authStore';
@@ -21,6 +21,7 @@ import { useTodayLessonsForInstructor, useInstructorWeekStats, type Lesson } fro
 import { useInstructorReferralCount } from '../../../hooks/useReferrals';
 import { useRefresh } from '../../../hooks/useRefresh';
 import { useRealtimeLessons } from '../../../hooks/useRealtimeLessons';
+import { usePaymentReminder } from '../../../hooks/usePaymentReminder';
 
 function formatTime(iso: string) {
   const d = new Date(iso);
@@ -51,7 +52,33 @@ export default function InstructorHome() {
   const { data: referrals = 0 } = useInstructorReferralCount();
   const { data: stripe } = useInstructorStripeStatus();
   const stripeOnboard = useStripeConnectOnboarding();
+  const reminder = usePaymentReminder();
   const [inviteOpen, setInviteOpen] = useState(false);
+
+  function sendReminder(studentId: string, name: string, owedHours: number) {
+    Alert.alert(
+      `Relancer ${name} ?`,
+      `Un message de rappel sera envoyé (${Math.abs(owedHours)}h en dépassement).`,
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Envoyer',
+          onPress: async () => {
+            try {
+              await reminder.mutateAsync({
+                student_id: studentId,
+                student_name: name,
+                amount: Math.abs(owedHours) * 30,
+              });
+              Alert.alert('Rappel envoyé', `${name} reçoit ta relance.`);
+            } catch (e: unknown) {
+              Alert.alert('Erreur', e instanceof Error ? e.message : 'Erreur');
+            }
+          },
+        },
+      ]
+    );
+  }
 
   const checklist: ChecklistItem[] = [
     {
@@ -102,6 +129,30 @@ export default function InstructorHome() {
 
   const overdueStudents = students.filter((s) => s.balance_hours < 0);
 
+  // Map student_id → balance pour décorer les leçons
+  const balanceById = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const s of students) m.set(s.id, s.balance_hours);
+    return m;
+  }, [students]);
+
+  const now = Date.now();
+  const HOUR = 60 * 60 * 1000;
+
+  // Élèves avec séance dans la fenêtre 48-72h ET solde négatif → alerte amber
+  const soonDueStudents = useMemo(() => {
+    return overdueStudents.filter((s) => {
+      const next = (today as Lesson[]).find(
+        (l) =>
+          l.student_id === s.id &&
+          (l.status === 'pending' || l.status === 'confirmed')
+      );
+      if (!next) return false;
+      const delta = new Date(next.scheduled_at).getTime() - now;
+      return delta >= 48 * HOUR && delta <= 72 * HOUR;
+    });
+  }, [overdueStudents, today, now]);
+
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={['top']}>
       <ScrollView
@@ -133,16 +184,31 @@ export default function InstructorHome() {
           onPress={() => router.push('/(instructor)/profile')}
         />
 
-        {overdueStudents.length > 0 ? (
+        {overdueStudents.length > 0 || soonDueStudents.length > 0 ? (
           <>
             <SectionLabel>⚠ Alertes</SectionLabel>
+            {soonDueStudents.slice(0, 2).map((s) => (
+              <AlertCard
+                key={`amber-${s.id}`}
+                tone="warning"
+                title={`🟡 ${s.first_name} ${s.last_name[0]}. — Règlement à venir`}
+                body={`Séance dans <72 h · Solde dû : ${Math.abs(s.balance_hours) * 30} €`}
+                cta="Rappeler"
+                onPress={() =>
+                  sendReminder(s.id, `${s.first_name} ${s.last_name[0]}.`, s.balance_hours)
+                }
+              />
+            ))}
             {overdueStudents.slice(0, 2).map((s) => (
               <AlertCard
-                key={s.id}
+                key={`red-${s.id}`}
                 tone="danger"
                 title={`🔴 ${s.first_name} ${s.last_name[0]}. — Heures dépassées`}
-                body={`Planifié ${s.hours_booked}h · Payé ${s.hours_paid}h`}
+                body={`Planifié ${s.hours_booked}h · Payé ${s.hours_paid}h — annulation auto si impayé 48 h avant`}
                 cta="Relancer"
+                onPress={() =>
+                  sendReminder(s.id, `${s.first_name} ${s.last_name[0]}.`, s.balance_hours)
+                }
               />
             ))}
           </>
@@ -174,8 +240,17 @@ export default function InstructorHome() {
               const studentName = (l as unknown as {
                 students?: { profiles?: { first_name: string; last_name: string } | null } | null;
               }).students?.profiles;
-              const status =
-                l.student_id === null
+              const studentBalance = l.student_id ? balanceById.get(l.student_id) ?? 0 : 0;
+              const deltaH = (new Date(l.scheduled_at).getTime() - now) / HOUR;
+              const isCritical =
+                l.student_id != null &&
+                studentBalance < 0 &&
+                deltaH >= 0 &&
+                deltaH <= 48 &&
+                (l.status === 'pending' || l.status === 'confirmed');
+              const status = isCritical
+                ? 'critical'
+                : l.student_id === null
                   ? 'free'
                   : l.status === 'confirmed' || l.status === 'completed'
                     ? 'confirmed'
@@ -191,7 +266,11 @@ export default function InstructorHome() {
                       ? `${studentName.first_name} ${studentName.last_name[0]}.`
                       : 'Créneau libre'
                   }
-                  subtitle={TYPE_LABEL[l.type] ?? l.type}
+                  subtitle={
+                    isCritical
+                      ? `${TYPE_LABEL[l.type] ?? l.type} · Annulation auto si impayé`
+                      : TYPE_LABEL[l.type] ?? l.type
+                  }
                   status={status}
                 />
               );
