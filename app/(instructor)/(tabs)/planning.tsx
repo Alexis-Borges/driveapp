@@ -10,6 +10,7 @@ import { CreateSlotSheet } from '../../../components/instructor/CreateSlotSheet'
 import { WeekView } from '../../../components/instructor/WeekView';
 import { useRefresh } from '../../../hooks/useRefresh';
 import { useRealtimeLessons } from '../../../hooks/useRealtimeLessons';
+import { useInstructorStudents } from '../../../hooks/useStudents';
 
 const PAUSE_HOUR = 13;
 const TYPE_LABEL: Record<string, string> = {
@@ -30,28 +31,47 @@ export default function InstructorPlanning() {
   });
   const [view, setView] = useState<'day' | 'week'>('day');
   const { data: lessons = [] } = useInstructorLessonsForDay(selected);
+  const { data: studentsList = [] } = useInstructorStudents();
   const [actionLesson, setActionLesson] = useState<Lesson | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const { refreshing, onRefresh } = useRefresh(['lessons', 'week-view']);
 
+  const balanceById = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const s of studentsList) m.set(s.id, s.balance_hours);
+    return m;
+  }, [studentsList]);
+
   const slots = useMemo(() => {
     const map: Record<number, SlotState> = {};
     map[PAUSE_HOUR] = { kind: 'unavail', reason: 'Pause déjeuner' };
+    const now = Date.now();
+    const HOUR = 60 * 60 * 1000;
     for (const l of lessons as Lesson[]) {
       const h = new Date(l.scheduled_at).getHours();
       const profileLink = (l as unknown as {
         students?: { profiles?: { first_name: string; last_name: string } | null } | null;
       }).students?.profiles;
-      const subtitle = `${TYPE_LABEL[l.type] ?? l.type} · 1h`;
       if (l.student_id == null) {
         map[h] = { kind: 'free' };
       } else {
-        const status =
-          l.status === 'confirmed' || l.status === 'completed'
+        const studentBalance = balanceById.get(l.student_id) ?? 0;
+        const deltaH = (new Date(l.scheduled_at).getTime() - now) / HOUR;
+        const isCritical =
+          studentBalance < 0 &&
+          deltaH >= 0 &&
+          deltaH <= 48 &&
+          (l.status === 'pending' || l.status === 'confirmed');
+        const status: 'confirmed' | 'pending' | 'critical' = isCritical
+          ? 'critical'
+          : l.status === 'confirmed' || l.status === 'completed'
             ? 'confirmed'
             : l.status === 'pending'
               ? 'pending'
               : 'critical';
+        const subtitle = isCritical
+          ? `${TYPE_LABEL[l.type] ?? l.type} · 1h · Annulation auto si impayé`
+          : `${TYPE_LABEL[l.type] ?? l.type} · 1h`;
         map[h] = {
           kind: 'booked',
           tone: status === 'confirmed' ? 'student' : 'instructor',
@@ -62,7 +82,7 @@ export default function InstructorPlanning() {
       }
     }
     return map;
-  }, [lessons]);
+  }, [lessons, balanceById]);
 
   const stats = useMemo(() => {
     let booked = 0;
