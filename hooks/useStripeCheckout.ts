@@ -20,12 +20,14 @@ export function useStripeCheckout() {
         customer: string;
       };
 
+      // Klarna Pay-in-3 nécessite "delayed payment methods"
+      const isBnpl = params.plan === 'three_x';
       const init = await initPaymentSheet({
         merchantDisplayName: 'DriveApp',
         customerId: customer,
         customerEphemeralKeySecret: ephemeralKey,
         paymentIntentClientSecret: clientSecret,
-        allowsDelayedPaymentMethods: false,
+        allowsDelayedPaymentMethods: isBnpl,
       });
       if (init.error) throw new Error(init.error.message);
 
