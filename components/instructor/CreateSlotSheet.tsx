@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { BottomSheet } from '../shared/BottomSheet';
 import { Button } from '../ui/Button';
 import { useCreateSlot, type LessonType } from '../../hooks/useLessons';
@@ -26,6 +26,7 @@ export function CreateSlotSheet({ visible, onClose, date, takenHours }: Props) {
   const create = useCreateSlot();
   const [hour, setHour] = useState<number | null>(null);
   const [type, setType] = useState<LessonType>('city');
+  const [pickup, setPickup] = useState('');
 
   const available = useMemo(() => HOURS.filter((h) => !takenHours.has(h)), [takenHours]);
 
@@ -37,8 +38,13 @@ export function CreateSlotSheet({ visible, onClose, date, takenHours }: Props) {
     const d = new Date(date);
     d.setHours(hour, 0, 0, 0);
     try {
-      await create.mutateAsync({ scheduled_at: d.toISOString(), type });
+      await create.mutateAsync({
+        scheduled_at: d.toISOString(),
+        type,
+        pickup_address: pickup.trim() || undefined,
+      });
       setHour(null);
+      setPickup('');
       onClose();
     } catch (e: unknown) {
       Alert.alert('Erreur', e instanceof Error ? e.message : 'Erreur');
@@ -89,6 +95,17 @@ export function CreateSlotSheet({ visible, onClose, date, takenHours }: Props) {
           </Pressable>
         ))}
       </View>
+
+      <Text className="text-muted2 text-[10px] uppercase tracking-wider mb-1.5">
+        Lieu de prise en charge (optionnel)
+      </Text>
+      <TextInput
+        value={pickup}
+        onChangeText={setPickup}
+        placeholder="Ex : 12 rue de la Liberté, Paris"
+        placeholderTextColor="#454B57"
+        className="bg-card2 border border-border rounded-2xl px-3 py-2.5 text-text mb-4"
+      />
 
       <Button
         label={create.isPending ? 'Création…' : 'Créer le créneau'}

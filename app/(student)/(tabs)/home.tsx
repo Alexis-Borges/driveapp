@@ -17,9 +17,10 @@ import { Checklist } from '../../../components/shared/Checklist';
 import { SectionLabel } from '../../../components/shared/SectionLabel';
 import { useStudentBalance, useStudentPackage } from '../../../hooks/useBalance';
 import { useRefresh } from '../../../hooks/useRefresh';
-import { useLinkedInstructorStripe } from '../../../hooks/useStripeConnect';
+import { useLinkedInstructorInfo } from '../../../hooks/useStripeConnect';
 import { ProfileCompletenessBanner } from '../../../components/shared/ProfileCompletenessBanner';
 import { SkeletonCard } from '../../../components/shared/Skeleton';
+import { useRealtimeLessons } from '../../../hooks/useRealtimeLessons';
 import {
   useUpcomingLessonForStudent,
   useUpcomingEvaluation,
@@ -40,18 +41,19 @@ function formatLessonTime(iso: string) {
   return d.toLocaleString('fr-FR', { weekday: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
-const HOURLY_RATE_EUR = 30;
-
 export default function StudentHome() {
   const profile = useAuthStore((s) => s.profile);
   const router = useRouter();
+  useRealtimeLessons();
   const { data: balance } = useStudentBalance();
   const { data: pkg } = useStudentPackage();
   const { data: nextLesson, isLoading: nextLoading } = useUpcomingLessonForStudent();
   const { data: evaluation } = useUpcomingEvaluation();
   const { data: lastFeedback, isLoading: feedbackLoading } = useLastFeedbackForStudent();
-  const { data: instructorStripe } = useLinkedInstructorStripe(pkg?.instructor_id ?? null);
-  const instructorVerified = !!instructorStripe?.is_verified;
+  const { data: instructorInfo } = useLinkedInstructorInfo(pkg?.instructor_id ?? null);
+  const instructorVerified = !!instructorInfo?.is_verified;
+  const hourlyRate = instructorInfo?.hourly_rate ?? 30;
+  const instructorName = instructorInfo?.full_name ?? 'Moniteur';
   const [linkOpen, setLinkOpen] = useState(false);
   const { refreshing, onRefresh } = useRefresh([
     'student-balance',
@@ -61,7 +63,7 @@ export default function StudentHome() {
     'last-feedback',
   ]);
 
-  const owed = balance && balance.balance_hours < 0 ? Math.abs(balance.balance_hours) * HOURLY_RATE_EUR : 0;
+  const owed = balance && balance.balance_hours < 0 ? Math.abs(balance.balance_hours) * hourlyRate : 0;
   const totalHours = pkg?.package_total_hours ?? 0;
   const doneHours = balance ? Math.max(0, balance.hours_booked) : 0;
 
@@ -177,7 +179,7 @@ export default function StudentHome() {
               number={1}
               type={TYPE_LABEL[(nextLesson as { type: string }).type] ?? 'Séance'}
               time={formatLessonTime((nextLesson as { scheduled_at: string }).scheduled_at)}
-              instructor="Moniteur"
+              instructor={instructorName}
               status={
                 (nextLesson as { status: string }).status === 'confirmed' ? 'confirmed' : 'pending'
               }
@@ -197,7 +199,7 @@ export default function StudentHome() {
           <SkeletonCard height={92} />
         ) : lastFeedback ? (
           <FeedbackCard
-            author="Monitrice"
+            author={instructorName}
             date={new Date(lastFeedback.scheduled_at).toLocaleDateString('fr-FR', {
               day: 'numeric',
               month: 'long',
@@ -210,7 +212,7 @@ export default function StudentHome() {
           />
         ) : (
           <FeedbackCard
-            author="Monitrice"
+            author={instructorName}
             date="—"
             body="Aucun retour pour le moment. Tes commentaires post-séance apparaîtront ici."
             rating={0}

@@ -45,11 +45,16 @@ export default function Signup() {
       return;
     }
     setLoading(true);
+    // Captcha : Supabase Auth supporte hCaptcha/Turnstile nativement.
+    // Plug le token côté UI (composant <HCaptcha />) puis active "Captcha protection"
+    // dans Supabase Auth Settings. Sans clé, on envoie undefined (ignoré).
+    const captchaToken = process.env.EXPO_PUBLIC_CAPTCHA_TOKEN ?? undefined;
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: { role, first_name: firstName, last_name: lastName, agreement_number: agreement },
+        captchaToken,
       },
     });
     if (error) {

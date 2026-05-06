@@ -68,8 +68,61 @@ export type LessonRow = {
   student_comment: string | null;
   cancelled_reason: string | null;
   reminder_sent_at: Iso | null;
+  pickup_address: string | null;
+  pickup_lat: number | null;
+  pickup_lng: number | null;
   created_at: Iso;
   updated_at: Iso;
+};
+
+export type RecurringSlotRow = {
+  id: string;
+  instructor_id: string;
+  weekday: number;
+  hour: number;
+  type: LessonType;
+  active: boolean;
+  valid_from: string | null;
+  valid_until: string | null;
+  created_at: Iso;
+};
+
+export type InstructorLeaveRow = {
+  id: string;
+  instructor_id: string;
+  starts_at: Iso;
+  ends_at: Iso;
+  reason: string | null;
+  created_at: Iso;
+};
+
+export type CompetenceRow = {
+  id: string;
+  parent_id: string | null;
+  label: string;
+  sort_order: number;
+};
+
+export type CompetenceStatus = 'not_started' | 'in_progress' | 'acquired';
+
+export type StudentCompetenceRow = {
+  student_id: string;
+  competence_id: string;
+  status: CompetenceStatus;
+  updated_at: Iso;
+  updated_by: string | null;
+};
+
+export type InvoiceRow = {
+  id: string;
+  number: string;
+  payment_id: string;
+  student_id: string;
+  amount_cents_ht: number;
+  vat_rate_bps: number;
+  amount_cents_ttc: number;
+  pdf_url: string | null;
+  issued_at: Iso;
 };
 
 export type PaymentRow = {

@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { Button } from '../../../components/ui/Button';
 import { AvatarPicker } from '../../../components/shared/AvatarPicker';
 import { EditProfileSheet } from '../../../components/shared/EditProfileSheet';
 import { LinkInstructorSheet } from '../../../components/student/LinkInstructorSheet';
 import { SectionLabel } from '../../../components/shared/SectionLabel';
 import { AppFooter } from '../../../components/shared/AppFooter';
+import { RgpdSection } from '../../../components/shared/RgpdSection';
 import { useAuthStore } from '../../../stores/authStore';
 import { confirmSignOut } from '../../../hooks/useAuth';
 import { useStudentPackage } from '../../../hooks/useBalance';
@@ -23,9 +25,26 @@ function Field({ label, value, locked }: { label: string; value: string; locked?
   );
 }
 
+function NavRow({ label, emoji, onPress }: { label: string; emoji: string; onPress: () => void }) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      onPress={onPress}
+      className="mx-5 mb-1.5 bg-card border border-border rounded-2xl px-3 py-3 flex-row items-center justify-between"
+    >
+      <Text className="text-text text-sm">
+        {emoji} {label}
+      </Text>
+      <Text className="text-muted2 text-base">›</Text>
+    </Pressable>
+  );
+}
+
 export default function StudentProfile() {
   const profile = useAuthStore((s) => s.profile);
   const { data: pkg } = useStudentPackage();
+  const router = useRouter();
   const [editOpen, setEditOpen] = useState(false);
   const [linkOpen, setLinkOpen] = useState(false);
 
@@ -39,6 +58,18 @@ export default function StudentProfile() {
           </Text>
           <Text className="text-muted text-xs">Élève en formation</Text>
         </View>
+
+        <SectionLabel>Mon parcours</SectionLabel>
+        <NavRow
+          emoji="🎯"
+          label="Mes compétences (REMC)"
+          onPress={() => router.push('/(student)/competences')}
+        />
+        <NavRow
+          emoji="🧾"
+          label="Mes factures"
+          onPress={() => router.push('/(student)/invoices')}
+        />
 
         <SectionLabel>Informations</SectionLabel>
         <Pressable onPress={() => setEditOpen(true)}>
@@ -60,6 +91,9 @@ export default function StudentProfile() {
         <Pressable onPress={() => setEditOpen(true)}>
           <Field label="Description" value={profile?.bio ?? ''} />
         </Pressable>
+
+        <SectionLabel>Confidentialité</SectionLabel>
+        <RgpdSection />
 
         <View className="px-5 mt-6 gap-2">
           <Button label="Modifier mon profil" variant="student" onPress={() => setEditOpen(true)} />

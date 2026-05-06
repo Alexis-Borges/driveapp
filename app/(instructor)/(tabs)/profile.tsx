@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { Button } from '../../../components/ui/Button';
 import { AvatarPicker } from '../../../components/shared/AvatarPicker';
 import { EditProfileSheet } from '../../../components/shared/EditProfileSheet';
 import { StripeConnectCard } from '../../../components/instructor/StripeConnectCard';
 import { SectionLabel } from '../../../components/shared/SectionLabel';
 import { AppFooter } from '../../../components/shared/AppFooter';
+import { RgpdSection } from '../../../components/shared/RgpdSection';
 import { useAuthStore } from '../../../stores/authStore';
 import { confirmSignOut } from '../../../hooks/useAuth';
 
@@ -22,8 +24,25 @@ function Field({ label, value, locked }: { label: string; value: string; locked?
   );
 }
 
+function NavRow({ label, emoji, onPress }: { label: string; emoji: string; onPress: () => void }) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      onPress={onPress}
+      className="mx-5 mb-1.5 bg-card border border-border rounded-2xl px-3 py-3 flex-row items-center justify-between"
+    >
+      <Text className="text-text text-sm">
+        {emoji} {label}
+      </Text>
+      <Text className="text-muted2 text-base">›</Text>
+    </Pressable>
+  );
+}
+
 export default function InstructorProfile() {
   const profile = useAuthStore((s) => s.profile);
+  const router = useRouter();
   const [editOpen, setEditOpen] = useState(false);
 
   return (
@@ -40,6 +59,18 @@ export default function InstructorProfile() {
         <SectionLabel>Paiements</SectionLabel>
         <StripeConnectCard />
 
+        <SectionLabel>Mon activité</SectionLabel>
+        <NavRow
+          emoji="🔁"
+          label="Créneaux récurrents"
+          onPress={() => router.push('/(instructor)/recurring')}
+        />
+        <NavRow
+          emoji="🌴"
+          label="Mes congés"
+          onPress={() => router.push('/(instructor)/leaves')}
+        />
+
         <SectionLabel>Informations</SectionLabel>
         <Pressable onPress={() => setEditOpen(true)}>
           <Field label="Prénom & Nom" value={`${profile?.first_name ?? ''} ${profile?.last_name ?? ''}`} />
@@ -51,6 +82,9 @@ export default function InstructorProfile() {
         <Pressable onPress={() => setEditOpen(true)}>
           <Field label="Description" value={profile?.bio ?? ''} />
         </Pressable>
+
+        <SectionLabel>Confidentialité</SectionLabel>
+        <RgpdSection />
 
         <View className="px-5 mt-6">
           <Button label="Modifier mon profil" variant="instructor" onPress={() => setEditOpen(true)} />
