@@ -49,57 +49,27 @@ export default function Signup() {
     // Plug le token côté UI (composant <HCaptcha />) puis active "Captcha protection"
     // dans Supabase Auth Settings. Sans clé, on envoie undefined (ignoré).
     const captchaToken = process.env.EXPO_PUBLIC_CAPTCHA_TOKEN ?? undefined;
-    const { data, error } = await supabase.auth.signUp({
+    const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { role, first_name: firstName, last_name: lastName, agreement_number: agreement },
+        data: {
+          role,
+          first_name: firstName,
+          last_name: lastName,
+          agreement_number: agreement,
+          referral_code: referral.trim().toUpperCase(),
+          invited_by: invitedBy ?? '',
+        },
         captchaToken,
       },
     });
+    setLoading(false);
     if (error) {
-      setLoading(false);
       Alert.alert('Inscription impossible', error.message);
       return;
     }
-    if (data.user) {
-      const { error: profileErr } = await supabase.from('profiles').insert({
-        id: data.user.id,
-        role,
-        first_name: firstName,
-        last_name: lastName,
-        email,
-      } as never);
-      if (profileErr) {
-        setLoading(false);
-        Alert.alert('Profil non créé', profileErr.message);
-        return;
-      }
-
-      if (role === 'student') {
-        let referredBy: string | null = null;
-        if (referral.trim()) {
-          const { data: parrain } = await supabase
-            .from('students')
-            .select('id')
-            .eq('referral_code', referral.trim().toUpperCase())
-            .maybeSingle();
-          referredBy = (parrain as { id: string } | null)?.id ?? null;
-        }
-        await supabase.from('students').insert({
-          id: data.user.id,
-          referral_code: '',
-          referred_by: referredBy,
-          instructor_id: invitedBy ?? null,
-        } as never);
-      } else if (role === 'instructor') {
-        await supabase.from('instructors').insert({
-          id: data.user.id,
-          agreement_number: agreement,
-        } as never);
-      }
-    }
-    setLoading(false);
+    // Le trigger Postgres handle_new_user crée profiles + students/instructors.
   }
 
   const accent = role === 'instructor' ? 'instructor' : 'student';

@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git fetch *)",
+      "Bash(git pull *)",
+      "Bash(git rebase *)",
+      "Bash(git ls-tree *)",
+      "Bash(git show *)",
+      "Read(//tmp/**)",
+      "Bash(git reset *)",
+      "Bash(npm install *)",
+      "Bash(npx expo *)"
+    ]
+  }
+}
