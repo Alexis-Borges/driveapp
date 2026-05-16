@@ -186,12 +186,12 @@ export default function InstructorHome() {
 
         {overdueStudents.length > 0 || soonDueStudents.length > 0 ? (
           <>
-            <SectionLabel>⚠ Alertes</SectionLabel>
+            <SectionLabel>Alertes</SectionLabel>
             {soonDueStudents.slice(0, 2).map((s) => (
               <AlertCard
                 key={`amber-${s.id}`}
                 tone="warning"
-                title={`🟡 ${s.first_name} ${s.last_name[0]}. — Règlement à venir`}
+                title={`${s.first_name} ${s.last_name[0]}. — Règlement à venir`}
                 body={`Séance dans <72 h · Solde dû : ${Math.abs(s.balance_hours) * 30} €`}
                 cta="Rappeler"
                 onPress={() =>
@@ -203,7 +203,7 @@ export default function InstructorHome() {
               <AlertCard
                 key={`red-${s.id}`}
                 tone="danger"
-                title={`🔴 ${s.first_name} ${s.last_name[0]}. — Heures dépassées`}
+                title={`${s.first_name} ${s.last_name[0]}. — Heures dépassées`}
                 body={`Planifié ${s.hours_booked}h · Payé ${s.hours_paid}h — annulation auto si impayé 48 h avant`}
                 cta="Relancer"
                 onPress={() =>
@@ -217,10 +217,10 @@ export default function InstructorHome() {
         <SectionLabel>Aperçu</SectionLabel>
         <KpiScroll
           items={[
-            { icon: '👤', value: stats.active, label: 'Élèves actifs' },
-            { icon: '📅', value: stats.lessonsThisWeek, label: 'Séances/sem' },
-            { icon: '⚠️', value: stats.overdue, label: 'Impayés', tone: stats.overdue > 0 ? 'danger' : 'default' },
-            { icon: '🤝', value: stats.referrals, label: 'Parrainages', tone: 'warning' },
+            { icon: 'user', value: stats.active, label: 'Élèves actifs' },
+            { icon: 'calendar', value: stats.lessonsThisWeek, label: 'Séances/sem' },
+            { icon: 'alert', value: stats.overdue, label: 'Impayés', tone: stats.overdue > 0 ? 'danger' : 'default' },
+            { icon: 'gift', value: stats.referrals, label: 'Parrainages', tone: 'warning' },
           ]}
         />
 
@@ -298,7 +298,7 @@ export default function InstructorHome() {
             </>
           ) : students.length === 0 ? (
             <EmptyState
-              icon="👥"
+              icon="users"
               title="Aucun élève pour le moment"
               body="Invite ton premier élève par email pour démarrer."
               cta="+ Inviter un élève"

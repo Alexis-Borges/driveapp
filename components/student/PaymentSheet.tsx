@@ -81,7 +81,7 @@ export function PaymentSheet({
       ) : null}
 
       <Button
-        label="💳 Procéder au paiement"
+        label="Procéder au paiement"
         variant="student"
         onPress={pay}
         loading={checkout.isPending}

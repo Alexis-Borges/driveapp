@@ -48,7 +48,7 @@ export default function StudentMessages() {
         </View>
         <AlertCard
           tone="instructor"
-          title="🚗 Aucun moniteur lié"
+          title="Aucun moniteur lié"
           body="Lie ton moniteur depuis ton profil pour démarrer une conversation."
         />
       </SafeAreaView>

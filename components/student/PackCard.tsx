@@ -1,9 +1,10 @@
 import { Pressable, Text, View } from 'react-native';
+import { Icon, type IconName } from '../ui/Icon';
 
 type Tone = 'student' | 'instructor' | 'warning';
 
 type Props = {
-  icon: string;
+  icon: IconName;
   title: string;
   subtitle: string;
   price: string;
@@ -13,9 +14,27 @@ type Props = {
 };
 
 const tones = {
-  student: { border: 'border-border', priceText: 'text-student', iconBg: 'bg-student/15', subtitleText: 'text-muted' },
-  instructor: { border: 'border-instructor/30', priceText: 'text-instructor', iconBg: 'bg-instructor/15', subtitleText: 'text-instructor' },
-  warning: { border: 'border-warning/30', priceText: 'text-warning', iconBg: 'bg-warning/15', subtitleText: 'text-warning' },
+  student: {
+    border: 'border-border',
+    priceText: 'text-student',
+    iconBg: 'bg-student/15',
+    iconColor: '#00C896',
+    subtitleText: 'text-muted',
+  },
+  instructor: {
+    border: 'border-instructor/30',
+    priceText: 'text-instructor',
+    iconBg: 'bg-instructor/15',
+    iconColor: '#7C75FF',
+    subtitleText: 'text-instructor',
+  },
+  warning: {
+    border: 'border-warning/30',
+    priceText: 'text-warning',
+    iconBg: 'bg-warning/15',
+    iconColor: '#FFB230',
+    subtitleText: 'text-warning',
+  },
 };
 
 export function PackCard({ icon, title, subtitle, price, unit, tone, onPress }: Props) {
@@ -26,7 +45,7 @@ export function PackCard({ icon, title, subtitle, price, unit, tone, onPress }: 
       className={`mx-5 mb-2 bg-card border ${t.border} rounded-2xl px-3 py-3 flex-row items-center gap-3`}
     >
       <View className={`${t.iconBg} w-10 h-10 rounded-xl items-center justify-center`}>
-        <Text className="text-base">{icon}</Text>
+        <Icon name={icon} size={20} color={t.iconColor} />
       </View>
       <View className="flex-1">
         <Text className="text-text text-sm font-bold">{title}</Text>

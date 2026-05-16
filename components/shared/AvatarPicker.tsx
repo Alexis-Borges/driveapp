@@ -1,5 +1,6 @@
-import { Alert, Pressable, Text, View } from 'react-native';
+import { Alert, Pressable, View } from 'react-native';
 import { Avatar } from '../ui/Avatar';
+import { Icon } from '../ui/Icon';
 import { usePickAndUploadAvatar } from '../../hooks/useAvatarUpload';
 import { useAuthStore } from '../../stores/authStore';
 
@@ -22,6 +23,8 @@ export function AvatarPicker({ size = 72, variant }: Props) {
     }
   }
 
+  const badgeSize = Math.round(size * 0.32);
+
   return (
     <Pressable onPress={handle} disabled={upload.isPending}>
       <View>
@@ -34,13 +37,13 @@ export function AvatarPicker({ size = 72, variant }: Props) {
         <View
           className="absolute bg-card2 rounded-full border-2 border-bg items-center justify-center"
           style={{
-            width: size * 0.31,
-            height: size * 0.31,
+            width: badgeSize,
+            height: badgeSize,
             bottom: 0,
             right: 0,
           }}
         >
-          <Text className="text-text text-[10px]">{upload.isPending ? '…' : '📷'}</Text>
+          <Icon name="camera" size={badgeSize * 0.55} color="#EEEEF0" />
         </View>
       </View>
     </Pressable>

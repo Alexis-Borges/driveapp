@@ -19,7 +19,7 @@ export function StripeConnectCard() {
   if (verified) {
     return (
       <View className="mx-5 mb-2 bg-student/10 border border-student/25 rounded-2xl px-3 py-3">
-        <Text className="text-student text-xs font-bold">✓ Stripe connecté</Text>
+        <Text className="text-student text-xs font-bold">Stripe connecté</Text>
         <Text className="text-muted text-[11px] mt-1">
           Tes paiements sont versés directement sur ton compte (commission 15 %).
         </Text>
@@ -33,7 +33,7 @@ export function StripeConnectCard() {
       className="mx-5 mb-2 bg-instructor/10 border border-instructor/25 rounded-2xl px-3 py-3"
     >
       <Text className="text-instructor text-xs font-bold">
-        {started ? '⚠ Onboarding Stripe à finaliser' : '💳 Activer les paiements'}
+        {started ? 'Onboarding Stripe à finaliser' : 'Activer les paiements'}
       </Text>
       <Text className="text-muted text-[11px] mt-1">
         {started

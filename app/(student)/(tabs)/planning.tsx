@@ -119,7 +119,7 @@ export default function StudentPlanning() {
         </View>
         <AlertCard
           tone="instructor"
-          title="🚗 Aucun moniteur lié"
+          title="Aucun moniteur lié"
           body="Lie ton moniteur depuis ton profil pour voir son planning et réserver."
         />
       </SafeAreaView>
@@ -155,7 +155,7 @@ export default function StudentPlanning() {
 
         <AlertCard
           tone="warning"
-          title="⏱ Règle 48h"
+          title="Règle 48h"
           body="Tout solde impayé 48h avant = annulation automatique."
         />
 

@@ -191,12 +191,12 @@ export default function StudentDetail() {
 
         <View className="px-5 gap-2">
           <Button
-            label="💬 Envoyer un message"
+            label="Envoyer un message"
             variant="instructor"
             onPress={() => router.push(`/(instructor)/chat/${id}`)}
           />
           <Button
-            label="📋 Planifier une évaluation"
+            label="Planifier une évaluation"
             variant="outline"
             onPress={() => setEvalOpen(true)}
           />

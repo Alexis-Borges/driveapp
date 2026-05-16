@@ -14,6 +14,7 @@ import { LockedRow } from '../../../components/student/LockedRow';
 import { LinkInstructorSheet } from '../../../components/student/LinkInstructorSheet';
 import { EmptyState } from '../../../components/shared/EmptyState';
 import { Checklist } from '../../../components/shared/Checklist';
+import { Icon } from '../../../components/ui/Icon';
 import { SectionLabel } from '../../../components/shared/SectionLabel';
 import { useStudentBalance, useStudentPackage } from '../../../hooks/useBalance';
 import { useRefresh } from '../../../hooks/useRefresh';
@@ -139,13 +140,13 @@ export default function StudentHome() {
 
         <AlertCard
           tone="warning"
-          title="⏱ Règle 48h"
+          title="Règle 48h"
           body="Tout solde impayé 48h avant la séance = annulation automatique."
         />
 
         {evaluation ? (
           <View className="mx-5 mb-2 bg-instructor/10 border border-instructor/25 rounded-2xl px-3 py-3 flex-row items-center gap-2.5">
-            <Text className="text-base">📋</Text>
+            <Icon name="clipboard" size={18} color="#7C75FF" />
             <View className="flex-1">
               <Text className="text-text text-sm font-medium">Évaluation planifiée</Text>
               <Text className="text-instructor text-[11px] mt-0.5">
@@ -161,7 +162,7 @@ export default function StudentHome() {
           </View>
         ) : (
           <LockedRow
-            icon="🔒"
+            icon="lock"
             title="Évaluation de conduite"
             subtitle="En attente de planification par votre monitrice"
           />
@@ -186,7 +187,7 @@ export default function StudentHome() {
             />
           ) : (
             <EmptyState
-              icon="📅"
+              icon="calendar"
               title="Aucune séance à venir"
               body="Réserve un créneau auprès de ton moniteur depuis le planning."
               variant="student"

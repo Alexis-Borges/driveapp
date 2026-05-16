@@ -8,6 +8,7 @@ import { SectionLabel } from '../../../components/shared/SectionLabel';
 import { useStudentPackage } from '../../../hooks/useBalance';
 import { useReferralStats } from '../../../hooks/useReferrals';
 import { useLinkedInstructorInfo } from '../../../hooks/useStripeConnect';
+import type { IconName } from '../../../components/ui/Icon';
 
 type Pack = {
   hours: number;
@@ -15,7 +16,7 @@ type Pack = {
   title: string;
   subtitle: string;
   unit: string;
-  icon: string;
+  icon: IconName;
   tone: 'student' | 'instructor' | 'warning';
 };
 
@@ -26,7 +27,7 @@ const PACKS: Pack[] = [
     title: '1 heure',
     subtitle: 'Séance à l\'unité',
     unit: 'Tarif standard',
-    icon: '🚗',
+    icon: 'car',
     tone: 'student',
   },
   {
@@ -35,7 +36,7 @@ const PACKS: Pack[] = [
     title: '5 heures',
     subtitle: 'Économisez 10 €',
     unit: '28 €/h',
-    icon: '⭐',
+    icon: 'star',
     tone: 'instructor',
   },
   {
@@ -44,7 +45,7 @@ const PACKS: Pack[] = [
     title: '10 heures',
     subtitle: 'Meilleure offre',
     unit: '25 €/h · −50 €',
-    icon: '🔥',
+    icon: 'flame',
     tone: 'warning',
   },
 ];
@@ -79,7 +80,7 @@ export default function StudentShop() {
 
         <SectionLabel>Mon code parrainage</SectionLabel>
         <View className="mx-5 mb-2 bg-student/8 border border-student/20 rounded-2xl px-3 py-3">
-          <Text className="text-text text-sm font-bold mb-1">Partage & gagne 🎁</Text>
+          <Text className="text-text text-sm font-bold mb-1">Partage & gagne</Text>
           <Text className="text-muted text-[11px] leading-5 mb-3">
             1 ami inscrit avec ton code = 1 séance offerte OU −50 € sur le prochain forfait.
           </Text>

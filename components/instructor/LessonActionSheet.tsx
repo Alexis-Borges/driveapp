@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Alert, Pressable, Text, TextInput, View } from 'react-native';
 import { BottomSheet } from '../shared/BottomSheet';
 import { Button } from '../ui/Button';
+import { Icon } from '../ui/Icon';
 import { useUpdateLessonStatus, type Lesson } from '../../hooks/useLessons';
 import { supabase } from '../../lib/supabase';
 import { useQueryClient } from '@tanstack/react-query';
@@ -145,7 +146,7 @@ export function LessonActionSheet({ visible, onClose, lesson }: Props) {
         <View className="gap-2 mb-3">
           {lesson.status === 'pending' ? (
             <Button
-              label="✓ Confirmer la séance"
+              label="Confirmer la séance"
               variant="instructor"
               onPress={() => setStatus('confirmed')}
               loading={updateStatus.isPending}
@@ -160,9 +161,12 @@ export function LessonActionSheet({ visible, onClose, lesson }: Props) {
               <View className="flex-row gap-1 mb-1">
                 {[1, 2, 3, 4, 5].map((n) => (
                   <Pressable key={n} onPress={() => setRating(n)}>
-                    <Text className={`text-2xl ${n <= rating ? 'text-warning' : 'text-muted2'}`}>
-                      ★
-                    </Text>
+                    <Icon
+                      name="star"
+                      size={26}
+                      color={n <= rating ? '#FFB230' : '#454B57'}
+                      fill={n <= rating ? '#FFB230' : 'none'}
+                    />
                   </Pressable>
                 ))}
               </View>
@@ -175,7 +179,7 @@ export function LessonActionSheet({ visible, onClose, lesson }: Props) {
                 className="bg-card2 border border-border rounded-2xl px-3 py-2.5 text-text min-h-[80px]"
               />
               <Button
-                label={saving ? '…' : '✓ Marquer terminée'}
+                label={saving ? '…' : 'Marquer terminée'}
                 variant="student"
                 onPress={saveFeedback}
                 loading={saving}

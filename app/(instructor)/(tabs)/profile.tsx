@@ -3,6 +3,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Button } from '../../../components/ui/Button';
+import { Icon } from '../../../components/ui/Icon';
 import { AvatarPicker } from '../../../components/shared/AvatarPicker';
 import { EditProfileSheet } from '../../../components/shared/EditProfileSheet';
 import { StripeConnectCard } from '../../../components/instructor/StripeConnectCard';
@@ -20,7 +21,7 @@ function Field({ label, value, locked }: { label: string; value: string; locked?
         <Text className="text-muted2 text-[9px] uppercase tracking-wider mb-0.5">{label}</Text>
         <Text className="text-text text-sm font-medium">{value || '—'}</Text>
       </View>
-      <Text className="text-muted2 text-xs">{locked ? '🔒' : '✎'}</Text>
+      <Icon name={locked ? 'lock' : 'edit'} size={14} color="#454B57" />
     </View>
   );
 }

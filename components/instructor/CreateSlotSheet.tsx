@@ -13,13 +13,15 @@ type Props = {
 
 const HOURS = [8, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 20, 21];
 
-const TYPES: { value: LessonType; label: string; emoji: string }[] = [
-  { value: 'city', label: 'Ville', emoji: '🏙' },
-  { value: 'highway', label: 'Autoroute', emoji: '🛣' },
-  { value: 'parking', label: 'Parking', emoji: '🅿️' },
-  { value: 'evaluation', label: 'Évaluation', emoji: '📋' },
-  { value: 'mock_exam', label: 'Examen blanc', emoji: '🎓' },
-  { value: 'other', label: 'Autre', emoji: '⋯' },
+import { Icon, type IconName } from '../ui/Icon';
+
+const TYPES: { value: LessonType; label: string; icon: IconName }[] = [
+  { value: 'city', label: 'Ville', icon: 'pin' },
+  { value: 'highway', label: 'Autoroute', icon: 'car' },
+  { value: 'parking', label: 'Parking', icon: 'home' },
+  { value: 'evaluation', label: 'Évaluation', icon: 'clipboard' },
+  { value: 'mock_exam', label: 'Examen blanc', icon: 'graduation' },
+  { value: 'other', label: 'Autre', icon: 'more' },
 ];
 
 export function CreateSlotSheet({ visible, onClose, date, takenHours }: Props) {
@@ -85,12 +87,17 @@ export function CreateSlotSheet({ visible, onClose, date, takenHours }: Props) {
           <Pressable
             key={t.value}
             onPress={() => setType(t.value)}
-            className={`px-3 py-2 rounded-xl border ${
+            className={`px-3 py-2 rounded-xl border flex-row items-center gap-1.5 ${
               type === t.value ? 'bg-instructor/20 border-instructor' : 'bg-card border-border'
             }`}
           >
+            <Icon
+              name={t.icon}
+              size={13}
+              color={type === t.value ? '#7C75FF' : '#EEEEF0'}
+            />
             <Text className={type === t.value ? 'text-instructor font-bold text-xs' : 'text-text text-xs'}>
-              {t.emoji} {t.label}
+              {t.label}
             </Text>
           </Pressable>
         ))}

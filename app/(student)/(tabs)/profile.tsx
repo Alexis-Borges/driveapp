@@ -3,6 +3,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Button } from '../../../components/ui/Button';
+import { Icon, type IconName } from '../../../components/ui/Icon';
 import { AvatarPicker } from '../../../components/shared/AvatarPicker';
 import { EditProfileSheet } from '../../../components/shared/EditProfileSheet';
 import { LinkInstructorSheet } from '../../../components/student/LinkInstructorSheet';
@@ -20,12 +21,12 @@ function Field({ label, value, locked }: { label: string; value: string; locked?
         <Text className="text-muted2 text-[9px] uppercase tracking-wider mb-0.5">{label}</Text>
         <Text className="text-text text-sm font-medium">{value || '—'}</Text>
       </View>
-      <Text className="text-muted2 text-xs">{locked ? '🔒' : '✎'}</Text>
+      <Icon name={locked ? 'lock' : 'edit'} size={14} color="#454B57" />
     </View>
   );
 }
 
-function NavRow({ label, emoji, onPress }: { label: string; emoji: string; onPress: () => void }) {
+function NavRow({ label, icon, onPress }: { label: string; icon: IconName; onPress: () => void }) {
   return (
     <Pressable
       accessibilityRole="button"
@@ -33,10 +34,11 @@ function NavRow({ label, emoji, onPress }: { label: string; emoji: string; onPre
       onPress={onPress}
       className="mx-5 mb-1.5 bg-card border border-border rounded-2xl px-3 py-3 flex-row items-center justify-between"
     >
-      <Text className="text-text text-sm">
-        {emoji} {label}
-      </Text>
-      <Text className="text-muted2 text-base">›</Text>
+      <View className="flex-row items-center gap-2">
+        <Icon name={icon} size={16} color="#878D9A" />
+        <Text className="text-text text-sm">{label}</Text>
+      </View>
+      <Icon name="chevron-right" size={16} color="#454B57" />
     </Pressable>
   );
 }
@@ -61,12 +63,12 @@ export default function StudentProfile() {
 
         <SectionLabel>Mon parcours</SectionLabel>
         <NavRow
-          emoji="🎯"
+          icon="trending"
           label="Mes compétences (REMC)"
           onPress={() => router.push('/(student)/competences')}
         />
         <NavRow
-          emoji="🧾"
+          icon="file"
           label="Mes factures"
           onPress={() => router.push('/(student)/invoices')}
         />

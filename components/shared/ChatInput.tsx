@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Pressable, Text, TextInput, View } from 'react-native';
+import { Pressable, TextInput, View } from 'react-native';
+import { Icon } from '../ui/Icon';
 
 type Props = {
   onSend: (text: string) => void | Promise<void>;
@@ -10,7 +11,7 @@ export function ChatInput({ onSend, variant }: Props) {
   const [value, setValue] = useState('');
   const [sending, setSending] = useState(false);
   const accent = variant === 'instructor' ? 'bg-instructor' : 'bg-student';
-  const arrowColor = variant === 'instructor' ? 'text-white' : 'text-[#0a1a14]';
+  const arrowColor = variant === 'instructor' ? '#fff' : '#0a1a14';
 
   async function send() {
     const t = value.trim();
@@ -40,7 +41,7 @@ export function ChatInput({ onSend, variant }: Props) {
         disabled={sending || !value.trim()}
         className={`${accent} w-9 h-9 rounded-full items-center justify-center ${sending || !value.trim() ? 'opacity-50' : ''}`}
       >
-        <Text className={`${arrowColor} text-base font-bold`}>➤</Text>
+        <Icon name="send" size={16} color={arrowColor} fill={arrowColor} />
       </Pressable>
     </View>
   );

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Alert, Pressable, Text, TextInput, View } from 'react-native';
 import { useUpdateStudentComment } from '../../hooks/useLessons';
+import { Icon } from '../ui/Icon';
 
 type Props = {
   author: string;
@@ -12,7 +13,6 @@ type Props = {
 };
 
 export function FeedbackCard({ author, date, body, rating, lessonId, studentComment }: Props) {
-  const stars = '★'.repeat(rating) + '☆'.repeat(Math.max(0, 5 - rating));
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(studentComment ?? '');
   const update = useUpdateStudentComment();
@@ -34,7 +34,17 @@ export function FeedbackCard({ author, date, body, rating, lessonId, studentComm
         <Text className="text-muted2 text-[10px]">{date}</Text>
       </View>
       <Text className="text-text text-[11px] leading-5 mb-2">{body}</Text>
-      <Text className="text-warning text-sm tracking-widest">{stars}</Text>
+      <View className="flex-row gap-0.5">
+        {[1, 2, 3, 4, 5].map((n) => (
+          <Icon
+            key={n}
+            name="star"
+            size={14}
+            color={n <= rating ? '#FFB230' : '#454B57'}
+            fill={n <= rating ? '#FFB230' : 'none'}
+          />
+        ))}
+      </View>
 
       {lessonId ? (
         <View className="mt-3 pt-2.5 border-t border-border">
