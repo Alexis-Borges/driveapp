@@ -1,0 +1,26 @@
+appId: host.exp.Exponent
+name: Login + Logout
+---
+- launchApp
+- assertVisible: "Se connecter"
+- tapOn:
+    id: "Email"
+- inputText: "eleve.test@driveapp.local"
+- tapOn:
+    id: "Mot de passe"
+- inputText: "Test1234!"
+- hideKeyboard
+- tapOn: "Se connecter"
+- assertVisible:
+    text: "Bonjour,"
+    timeout: 10000
+- tapOn: "Profil"
+- assertVisible: "Se déconnecter"
+- tapOn: "Se déconnecter"
+- assertVisible: "Se déconnecter ?"
+- tapOn:
+    text: "Se déconnecter"
+    index: 1
+- assertVisible:
+    text: "Connecte-toi à ton compte"
+    timeout: 5000

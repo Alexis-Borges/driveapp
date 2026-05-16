@@ -1,0 +1,28 @@
+appId: host.exp.Exponent
+name: Inscription élève
+---
+- launchApp
+- assertVisible: "DriveApp"
+- assertVisible: "Se connecter"
+- tapOn: "Créer un compte"
+- assertVisible: "Créer un compte"
+- tapOn: "Élève"
+- tapOn:
+    id: "Prénom"
+- inputText: "Sofia"
+- tapOn:
+    id: "Nom"
+- inputText: "Test"
+- tapOn:
+    id: "Email"
+- inputText: "eleve.test@driveapp.local"
+- tapOn:
+    id: "Mot de passe"
+- inputText: "Test1234!"
+- hideKeyboard
+- tapOn: "Créer mon compte"
+- assertVisible:
+    text: "Bonjour,"
+    timeout: 10000
+- assertVisible: "Élève"
+- takeScreenshot: signup_student_home

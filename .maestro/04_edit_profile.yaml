@@ -1,0 +1,30 @@
+appId: host.exp.Exponent
+name: Édition profil
+---
+- launchApp
+- runFlow:
+    when:
+      visible: "Se connecter"
+    commands:
+      - tapOn:
+          id: "Email"
+      - inputText: "eleve.test@driveapp.local"
+      - tapOn:
+          id: "Mot de passe"
+      - inputText: "Test1234!"
+      - hideKeyboard
+      - tapOn: "Se connecter"
+- tapOn: "Profil"
+- tapOn: "Modifier mon profil"
+- assertVisible: "Modifier mon profil"
+- tapOn:
+    id: "Téléphone"
+- inputText: "0612345678"
+- tapOn:
+    id: "Description"
+- inputText: "Élève motivé, ponctuel"
+- hideKeyboard
+- tapOn: "Enregistrer"
+- assertVisible:
+    text: "0612345678"
+    timeout: 5000

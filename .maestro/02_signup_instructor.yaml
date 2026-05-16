@@ -1,0 +1,28 @@
+appId: host.exp.Exponent
+name: Inscription moniteur
+---
+- launchApp
+- tapOn: "Créer un compte"
+- tapOn: "Moniteur"
+- tapOn:
+    id: "Prénom"
+- inputText: "Feryel"
+- tapOn:
+    id: "Nom"
+- inputText: "Test"
+- tapOn:
+    id: "Email"
+- inputText: "moniteur.test@driveapp.local"
+- tapOn:
+    id: "Mot de passe"
+- inputText: "Test1234!"
+- tapOn:
+    id: "N° d'agrément"
+- inputText: "AGR-TEST-001"
+- hideKeyboard
+- tapOn: "Créer mon compte"
+- assertVisible:
+    text: "Bonjour,"
+    timeout: 10000
+- assertVisible: "Moniteur"
+- takeScreenshot: signup_instructor_home

@@ -1,0 +1,36 @@
+appId: host.exp.Exponent
+name: Élève lie son moniteur
+---
+- launchApp
+- runFlow:
+    when:
+      visible: "Se connecter"
+    commands:
+      - tapOn:
+          id: "Email"
+      - inputText: "eleve.test@driveapp.local"
+      - tapOn:
+          id: "Mot de passe"
+      - inputText: "Test1234!"
+      - hideKeyboard
+      - tapOn: "Se connecter"
+- runFlow:
+    when:
+      visible: "Lier ton moniteur"
+    commands:
+      - tapOn: "Lier"
+- runFlow:
+    when:
+      notVisible: "Lier un moniteur"
+    commands:
+      - tapOn: "Profil"
+      - tapOn: "Lier mon moniteur"
+- assertVisible: "Lier un moniteur"
+- tapOn:
+    id: "Email du moniteur"
+- inputText: "moniteur.test@driveapp.local"
+- hideKeyboard
+- tapOn: "Lier"
+- assertVisible:
+    text: "Moniteur lié"
+    timeout: 5000

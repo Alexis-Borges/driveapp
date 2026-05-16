@@ -1,0 +1,27 @@
+appId: host.exp.Exponent
+name: Moniteur crée un créneau
+---
+- launchApp
+- runFlow:
+    when:
+      visible: "Se connecter"
+    commands:
+      - tapOn:
+          id: "Email"
+      - inputText: "moniteur.test@driveapp.local"
+      - tapOn:
+          id: "Mot de passe"
+      - inputText: "Test1234!"
+      - hideKeyboard
+      - tapOn: "Se connecter"
+- tapOn: "Planning"
+- assertVisible: "Planning"
+- tapOn: "+ Ajouter un créneau"
+- assertVisible: "Nouveau créneau"
+- tapOn: "10h"
+- tapOn: "Ville"
+- tapOn: "Créer le créneau"
+- assertVisible:
+    text: "Créneau libre"
+    timeout: 5000
+- takeScreenshot: instructor_planning_with_slot

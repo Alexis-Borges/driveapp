@@ -1,0 +1,24 @@
+appId: host.exp.Exponent
+name: Élève parcourt la Boutique
+---
+- launchApp
+- runFlow:
+    when:
+      visible: "Se connecter"
+    commands:
+      - tapOn:
+          id: "Email"
+      - inputText: "eleve.test@driveapp.local"
+      - tapOn:
+          id: "Mot de passe"
+      - inputText: "Test1234!"
+      - hideKeyboard
+      - tapOn: "Se connecter"
+- tapOn: "Boutique"
+- assertVisible: "Acheter des heures"
+- assertVisible: "1 heure"
+- assertVisible: "5 heures"
+- assertVisible: "10 heures"
+- assertVisible: "Mon code parrainage"
+- assertVisible: "Partage & gagne"
+- takeScreenshot: shop_overview
