@@ -44,10 +44,11 @@ export default function InstructorPlanning() {
 
   const slots = useMemo(() => {
     const map: Record<number, SlotState> = {};
-    map[PAUSE_HOUR] = { kind: 'unavail', reason: 'Pause déjeuner' };
     const now = Date.now();
     const HOUR = 60 * 60 * 1000;
     for (const l of lessons as Lesson[]) {
+      // ignore les leçons annulées (elles libèrent le créneau)
+      if (l.status === 'cancelled' || l.status === 'auto_cancelled') continue;
       const h = new Date(l.scheduled_at).getHours();
       const profileLink = (l as unknown as {
         students?: { profiles?: { first_name: string; last_name: string } | null } | null;
@@ -66,9 +67,7 @@ export default function InstructorPlanning() {
           ? 'critical'
           : l.status === 'confirmed' || l.status === 'completed'
             ? 'confirmed'
-            : l.status === 'pending'
-              ? 'pending'
-              : 'critical';
+            : 'pending';
         const subtitle = isCritical
           ? `${TYPE_LABEL[l.type] ?? l.type} · 1h · Annulation auto si impayé`
           : `${TYPE_LABEL[l.type] ?? l.type} · 1h`;
@@ -80,6 +79,10 @@ export default function InstructorPlanning() {
           status,
         };
       }
+    }
+    // pause déjeuner uniquement si pas déjà occupée
+    if (!map[PAUSE_HOUR]) {
+      map[PAUSE_HOUR] = { kind: 'unavail', reason: 'Pause déjeuner' };
     }
     return map;
   }, [lessons, balanceById]);
@@ -109,6 +112,7 @@ export default function InstructorPlanning() {
     const s = new Set<number>();
     s.add(PAUSE_HOUR);
     for (const l of lessons as Lesson[]) {
+      if (l.status === 'cancelled' || l.status === 'auto_cancelled') continue;
       s.add(new Date(l.scheduled_at).getHours());
     }
     return s;
@@ -198,13 +202,15 @@ export default function InstructorPlanning() {
           </>
         ) : null}
 
-        <View className="px-5 pt-3.5">
-          <Button
-            label="+ Ajouter un créneau"
-            variant="instructor"
-            onPress={() => setCreateOpen(true)}
-          />
-        </View>
+        {view === 'day' ? (
+          <View className="px-5 pt-3.5">
+            <Button
+              label="+ Ajouter un créneau"
+              variant="instructor"
+              onPress={() => setCreateOpen(true)}
+            />
+          </View>
+        ) : null}
       </ScrollView>
       <LessonActionSheet
         visible={!!actionLesson}

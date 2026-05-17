@@ -38,8 +38,8 @@ export default function StudentPlanning() {
 
   const slots = useMemo(() => {
     const map: Record<number, SlotState> = {};
-    map[PAUSE_HOUR] = { kind: 'unavail', reason: 'Pause déjeuner' };
     for (const l of lessons as Lesson[]) {
+      if (l.status === 'cancelled' || l.status === 'auto_cancelled') continue;
       const h = new Date(l.scheduled_at).getHours();
       if (l.student_id == null) {
         map[h] = { kind: 'free' };
@@ -53,6 +53,9 @@ export default function StudentPlanning() {
       } else {
         map[h] = { kind: 'unavail', reason: 'Créneau pris' };
       }
+    }
+    if (!map[PAUSE_HOUR]) {
+      map[PAUSE_HOUR] = { kind: 'unavail', reason: 'Pause déjeuner' };
     }
     return map;
   }, [lessons, profile]);
