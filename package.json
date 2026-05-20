@@ -13,7 +13,10 @@
     "build:preview": "eas build --profile preview --platform android",
     "build:prod": "eas build --profile production --platform all",
     "supabase:types": "supabase gen types typescript --project-id gaqivtanxcqcekfdzlfk > types/database.ts",
-    "supabase:deploy:fns": "supabase functions deploy create-payment-intent stripe-webhook stripe-connect-onboard auto-cancel-48h lesson-reminders send-push admin-refund rgpd-export rgpd-delete invoice-pdf generate-recurring-slots"
+    "supabase:deploy:fns": "supabase functions deploy create-payment-intent stripe-webhook stripe-connect-onboard auto-cancel-48h lesson-reminders send-push admin-refund rgpd-export rgpd-delete invoice-pdf generate-recurring-slots",
+    "seed:dev": "node scripts/seed-dev.mjs",
+    "seed:reset": "node scripts/seed-dev.mjs --reset",
+    "simulate": "node scripts/simulate-activity.mjs"
   },
   "dependencies": {
     "@expo-google-fonts/dm-mono": "^0.4.2",
