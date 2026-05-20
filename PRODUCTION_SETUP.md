@@ -9,7 +9,7 @@ npm install
 ```
 
 Nouveaux packages : `expo-clipboard`, `@sentry/react-native`, `posthog-react-native`,
-`jest`, `jest-expo`, `@types/jest`.
+`lucide-react-native`, `react-native-svg`, `jest`, `jest-expo`, `@types/jest`.
 
 ## 2. Variables d'environnement
 
@@ -56,18 +56,28 @@ supabase/migrations/010_recurring_and_leaves.sql
 supabase/migrations/011_competences_remc.sql
 supabase/migrations/012_invoices_admin_audit.sql
 supabase/migrations/013_refund_helper_and_cron.sql
+supabase/migrations/014_push_config_fix.sql
+supabase/migrations/015_handle_new_user.sql
+supabase/migrations/016_fix_handle_new_user.sql
 ```
 
 Puis activer la **réplication realtime** sur la table `lessons` (Database →
 Replication → cocher `lessons`).
 
-Configurer les paramètres du cron (une fois) :
+Configurer les credentials push (⚠️ étape manuelle obligatoire — à faire
+après avoir appliqué la migration 014) :
 
 ```sql
-ALTER DATABASE postgres SET app.supabase_url = 'https://xxx.supabase.co';
-ALTER DATABASE postgres SET app.service_role_key = 'eyJ...';
-SELECT pg_reload_conf();
+-- Remplace les valeurs par tes vraies credentials Supabase
+INSERT INTO _app_config (key, value)
+VALUES
+  ('supabase_url', 'https://TON_PROJECT_ID.supabase.co'),
+  ('service_role_key', 'eyJ...ta_service_role_key...')
+ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
 ```
+
+⚠️ `ALTER DATABASE postgres SET app.*` n'est **pas** supporté sur Supabase
+hébergé — la migration 014 remplace cette approche par la table `_app_config`.
 
 ## 4. Edge Functions
 
@@ -128,8 +138,15 @@ notamment :
 ## 8. Tests
 
 ```bash
+# Tests unitaires (validation schemas)
 npm test
 npm run typecheck
+
+# Tests UI automatisés avec Maestro (sur device/émulateur)
+# Prérequis : maestro installé, app lancée dans Expo Go
+maestro test .maestro/
+
+# Voir .maestro/README.md pour les identifiants de test et les flows disponibles
 ```
 
 ## 9. Monitoring post-launch
