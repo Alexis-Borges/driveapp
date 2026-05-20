@@ -1,5 +1,6 @@
 import { Pressable, Text, View } from 'react-native';
 import { Badge } from '../ui/Badge';
+import { PLANNING_HOURS } from '../../lib/planning';
 
 export type SlotState =
   | { kind: 'free' }
@@ -15,9 +16,7 @@ type Props = {
   onPressBooked?: (hour: number) => void;
 };
 
-const DEFAULT_HOURS = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21];
-
-export function PlanningGrid({ hours = DEFAULT_HOURS, slots, variant, onPressFree, onPressBooked }: Props) {
+export function PlanningGrid({ hours = PLANNING_HOURS, slots, variant, onPressFree, onPressBooked }: Props) {
   return (
     <View className="px-5 gap-1.5">
       {hours.map((h) => {

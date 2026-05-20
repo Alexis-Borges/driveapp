@@ -4,8 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../stores/authStore';
 import type { Lesson } from '../../hooks/useLessons';
+import { PLANNING_HOURS } from '../../lib/planning';
 
-const HOURS = Array.from({ length: 14 }, (_, i) => 8 + i); // 8..21
 const DAYS_FR = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 
 function startOfWeek(d: Date) {
@@ -46,6 +46,8 @@ export function WeekView({ weekStart, onPressLesson }: Props) {
   const grid = useMemo(() => {
     const map = new Map<string, Lesson>();
     for (const l of lessons) {
+      // les leçons annulées libèrent le créneau
+      if (l.status === 'cancelled' || l.status === 'auto_cancelled') continue;
       const d = new Date(l.scheduled_at);
       const key = `${(d.getDay() + 6) % 7}-${d.getHours()}`;
       map.set(key, l);
@@ -69,7 +71,7 @@ export function WeekView({ weekStart, onPressLesson }: Props) {
           })}
         </View>
 
-        {HOURS.map((h) => (
+        {PLANNING_HOURS.map((h) => (
           <View key={h} className="flex-row items-center">
             <View className="w-12 items-end pr-2">
               <Text className="text-muted2 text-[10px]">{String(h).padStart(2, '0')}h</Text>
@@ -80,11 +82,9 @@ export function WeekView({ weekStart, onPressLesson }: Props) {
                 ? 'bg-card2 border-border'
                 : l.student_id == null
                   ? 'bg-student/15 border-student/30'
-                  : l.status === 'confirmed'
+                  : l.status === 'confirmed' || l.status === 'completed'
                     ? 'bg-student border-student'
-                    : l.status === 'pending'
-                      ? 'bg-instructor/30 border-instructor/50'
-                      : 'bg-danger/20 border-danger/40';
+                    : 'bg-instructor/30 border-instructor/50';
               const node = (
                 <View
                   className={`w-14 h-10 m-0.5 rounded-md border ${tone} items-center justify-center`}

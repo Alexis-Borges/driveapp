@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { Button } from '../../components/ui/Button';
 import { BottomSheet } from '../../components/shared/BottomSheet';
 import { SectionLabel } from '../../components/shared/SectionLabel';
+import { Icon } from '../../components/ui/Icon';
 import { useCreateLeave, useDeleteLeave, useInstructorLeaves } from '../../hooks/useLeaves';
 
 function dayInDays(n: number, hour = 8): Date {
@@ -98,7 +99,7 @@ export default function Leaves() {
                 ) : null}
               </View>
               <Pressable onPress={() => confirmDelete(l.id)} className="ml-2">
-                <Text className="text-danger text-xs">🗑</Text>
+                <Icon name="trash" size={16} color="#FF4F4F" />
               </Pressable>
             </View>
           ))

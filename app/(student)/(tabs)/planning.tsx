@@ -9,8 +9,8 @@ import { useStudentBalance, useStudentPackage } from '../../../hooks/useBalance'
 import { useAuthStore } from '../../../stores/authStore';
 import { useRefresh } from '../../../hooks/useRefresh';
 import { useRealtimeLessons, useRealtimeInstructorSlots } from '../../../hooks/useRealtimeLessons';
+import { PAUSE_HOUR } from '../../../lib/planning';
 
-const PAUSE_HOUR = 13;
 const TYPE_LABEL: Record<string, string> = {
   city: 'Ville',
   highway: 'Autoroute',

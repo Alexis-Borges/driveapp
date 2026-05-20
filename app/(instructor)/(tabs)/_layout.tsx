@@ -1,8 +1,8 @@
 import { Tabs } from 'expo-router';
-import { Text } from 'react-native';
+import { Icon, type IconName } from '../../../components/ui/Icon';
 
-const tabIcon = (emoji: string) => ({ color }: { color: string }) =>
-  <Text style={{ fontSize: 18, color }}>{emoji}</Text>;
+const tabIcon = (name: IconName) => ({ color }: { color: string }) =>
+  <Icon name={name} size={22} color={color} strokeWidth={2} />;
 
 export default function InstructorTabs() {
   return (
@@ -21,10 +21,10 @@ export default function InstructorTabs() {
         tabBarLabelStyle: { fontSize: 10, fontWeight: '700', textTransform: 'uppercase' },
       }}
     >
-      <Tabs.Screen name="home" options={{ title: 'Accueil', tabBarIcon: tabIcon('🏠') }} />
-      <Tabs.Screen name="planning" options={{ title: 'Planning', tabBarIcon: tabIcon('📅') }} />
-      <Tabs.Screen name="messages" options={{ title: 'Messages', tabBarIcon: tabIcon('💬') }} />
-      <Tabs.Screen name="profile" options={{ title: 'Profil', tabBarIcon: tabIcon('👤') }} />
+      <Tabs.Screen name="home" options={{ title: 'Accueil', tabBarIcon: tabIcon('home') }} />
+      <Tabs.Screen name="planning" options={{ title: 'Planning', tabBarIcon: tabIcon('calendar') }} />
+      <Tabs.Screen name="messages" options={{ title: 'Messages', tabBarIcon: tabIcon('message') }} />
+      <Tabs.Screen name="profile" options={{ title: 'Profil', tabBarIcon: tabIcon('user') }} />
     </Tabs>
   );
 }

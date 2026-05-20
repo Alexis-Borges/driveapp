@@ -3,6 +3,8 @@ import { Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-nativ
 import { BottomSheet } from '../shared/BottomSheet';
 import { Button } from '../ui/Button';
 import { useCreateSlot, type LessonType } from '../../hooks/useLessons';
+import { BOOKABLE_HOURS } from '../../lib/planning';
+import { Icon, type IconName } from '../ui/Icon';
 
 type Props = {
   visible: boolean;
@@ -10,10 +12,6 @@ type Props = {
   date: Date;
   takenHours: Set<number>;
 };
-
-const HOURS = [8, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 20, 21];
-
-import { Icon, type IconName } from '../ui/Icon';
 
 const TYPES: { value: LessonType; label: string; icon: IconName }[] = [
   { value: 'city', label: 'Ville', icon: 'pin' },
@@ -30,7 +28,10 @@ export function CreateSlotSheet({ visible, onClose, date, takenHours }: Props) {
   const [type, setType] = useState<LessonType>('city');
   const [pickup, setPickup] = useState('');
 
-  const available = useMemo(() => HOURS.filter((h) => !takenHours.has(h)), [takenHours]);
+  const available = useMemo(
+    () => BOOKABLE_HOURS.filter((h) => !takenHours.has(h)),
+    [takenHours]
+  );
 
   async function submit() {
     if (hour == null) {

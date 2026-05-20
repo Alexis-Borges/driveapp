@@ -85,7 +85,10 @@ export function FeedbackCard({ author, date, body, rating, lessonId, studentComm
                 Ta réponse
               </Text>
               <Text className="text-text text-[11px] leading-5">{studentComment}</Text>
-              <Text className="text-student text-[10px] font-bold mt-1">Modifier ✎</Text>
+              <View className="flex-row items-center gap-1 mt-1">
+                <Icon name="edit" size={10} color="#00C896" />
+                <Text className="text-student text-[10px] font-bold">Modifier</Text>
+              </View>
             </Pressable>
           ) : (
             <Pressable onPress={() => setEditing(true)} className="flex-row items-center gap-1">

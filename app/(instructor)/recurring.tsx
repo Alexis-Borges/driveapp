@@ -5,15 +5,16 @@ import { useRouter } from 'expo-router';
 import { Button } from '../../components/ui/Button';
 import { BottomSheet } from '../../components/shared/BottomSheet';
 import { SectionLabel } from '../../components/shared/SectionLabel';
+import { Icon } from '../../components/ui/Icon';
 import {
   useCreateRecurringSlot,
   useDeleteRecurringSlot,
   useRecurringSlots,
   useToggleRecurringSlot,
 } from '../../hooks/useRecurringSlots';
+import { BOOKABLE_HOURS } from '../../lib/planning';
 
 const DAYS = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
-const HOURS = Array.from({ length: 15 }, (_, i) => 7 + i); // 7..21
 
 export default function RecurringSlots() {
   const router = useRouter();
@@ -81,7 +82,7 @@ export default function RecurringSlots() {
                 trackColor={{ false: '#2A2D33', true: '#7C75FF' }}
               />
               <Pressable onPress={() => confirmDelete(r.id)} className="ml-3">
-                <Text className="text-danger text-xs">🗑</Text>
+                <Icon name="trash" size={16} color="#FF4F4F" />
               </Pressable>
             </View>
           ))
@@ -119,7 +120,7 @@ export default function RecurringSlots() {
 
         <Text className="text-muted2 text-[10px] uppercase tracking-wider mb-1.5">Heure</Text>
         <View className="flex-row flex-wrap gap-1.5 mb-4">
-          {HOURS.map((h) => (
+          {BOOKABLE_HOURS.map((h) => (
             <Pressable
               key={h}
               onPress={() => setHour(h)}

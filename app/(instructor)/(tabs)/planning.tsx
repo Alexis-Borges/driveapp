@@ -11,8 +11,8 @@ import { WeekView } from '../../../components/instructor/WeekView';
 import { useRefresh } from '../../../hooks/useRefresh';
 import { useRealtimeLessons } from '../../../hooks/useRealtimeLessons';
 import { useInstructorStudents } from '../../../hooks/useStudents';
+import { PAUSE_HOUR, PLANNING_HOURS } from '../../../lib/planning';
 
-const PAUSE_HOUR = 13;
 const TYPE_LABEL: Record<string, string> = {
   city: 'Ville',
   highway: 'Autoroute',
@@ -90,7 +90,7 @@ export default function InstructorPlanning() {
   const stats = useMemo(() => {
     let booked = 0;
     let free = 0;
-    for (let h = 8; h <= 21; h++) {
+    for (const h of PLANNING_HOURS) {
       if (h === PAUSE_HOUR) continue;
       const s = slots[h];
       if (!s) continue;

@@ -3,6 +3,7 @@ import { Alert, Pressable, Text, View } from 'react-native';
 import { BottomSheet } from '../shared/BottomSheet';
 import { Button } from '../ui/Button';
 import { TextField } from '../ui/TextField';
+import { Icon } from '../ui/Icon';
 import { useInviteStudentByEmail, useShareInviteLink } from '../../hooks/useInviteStudent';
 
 type Props = {
@@ -72,7 +73,7 @@ export function InviteStudentSheet({ visible, onClose }: Props) {
         onPress={shareLink}
         className="bg-card2 border border-border rounded-2xl px-3 py-3 flex-row items-center gap-2"
       >
-        <Text className="text-base">🔗</Text>
+        <Icon name="link" size={18} color="#7C75FF" />
         <View className="flex-1">
           <Text className="text-text text-sm font-bold">Partager mon lien direct</Text>
           <Text className="text-muted2 text-[10px] mt-0.5">

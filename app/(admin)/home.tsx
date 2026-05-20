@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 import { Button } from '../../components/ui/Button';
+import { Icon } from '../../components/ui/Icon';
 import { confirmSignOut } from '../../hooks/useAuth';
 import { SectionLabel } from '../../components/shared/SectionLabel';
 import { AppFooter } from '../../components/shared/AppFooter';
@@ -109,11 +110,14 @@ export default function AdminHome() {
           onPress={() => router.push('/(admin)/instructors')}
           className="mx-5 mb-2 bg-card border border-border rounded-2xl px-3 py-3 flex-row justify-between items-center"
         >
-          <View className="flex-1">
-            <Text className="text-text text-sm font-bold">🛡 Validation moniteurs</Text>
-            <Text className="text-muted2 text-[10px] mt-0.5">
-              Vérifier l'agrément avant activation
-            </Text>
+          <View className="flex-1 flex-row items-center gap-2">
+            <Icon name="shield" size={16} color="#FFB230" />
+            <View className="flex-1">
+              <Text className="text-text text-sm font-bold">Validation moniteurs</Text>
+              <Text className="text-muted2 text-[10px] mt-0.5">
+                Vérifier l'agrément avant activation
+              </Text>
+            </View>
           </View>
           {pending > 0 ? (
             <View className="bg-warning/20 px-2.5 py-1 rounded-full mr-2">
