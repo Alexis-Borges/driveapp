@@ -8,6 +8,7 @@ type Props = {
   variant?: Variant;
   loading?: boolean;
   disabled?: boolean;
+  testID?: string;
 };
 
 const styles: Record<Variant, { bg: string; text: string }> = {
@@ -17,11 +18,12 @@ const styles: Record<Variant, { bg: string; text: string }> = {
   danger: { bg: 'bg-danger/10 border border-danger/30', text: 'text-danger' },
 };
 
-export function Button({ label, onPress, variant = 'instructor', loading, disabled }: Props) {
+export function Button({ label, onPress, variant = 'instructor', loading, disabled, testID }: Props) {
   const s = styles[variant];
   const isDisabled = disabled || loading;
   return (
     <Pressable
+      testID={testID ?? label}
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityState={{ disabled: isDisabled, busy: loading }}

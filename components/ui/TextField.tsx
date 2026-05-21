@@ -5,13 +5,14 @@ type Props = TextInputProps & {
   error?: string;
 };
 
-export function TextField({ label, error, ...props }: Props) {
+export function TextField({ label, error, testID, ...props }: Props) {
   return (
     <View className="mb-3">
       <Text className="text-muted text-[10px] font-bold uppercase tracking-wider mb-1.5">
         {label}
       </Text>
       <TextInput
+        testID={testID ?? label}
         accessibilityLabel={label}
         placeholderTextColor="#454B57"
         className="bg-card border border-border rounded-2xl px-4 py-3 text-text"
