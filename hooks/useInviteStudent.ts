@@ -34,22 +34,13 @@ export function useInviteStudentByEmail() {
       if (!profile) throw new Error('Not authenticated');
       const email = studentEmail.toLowerCase().trim();
 
-      const { data: existing } = await supabase
-        .from('profiles')
-        .select('id, role')
-        .eq('email', email)
-        .maybeSingle();
+      const { data, error } = await supabase.rpc('link_student_by_email', {
+        p_student_email: email,
+      });
+      if (error) throw new Error(error.message);
 
-      if (existing) {
-        const row = existing as { id: string; role: string };
-        if (row.role !== 'student') {
-          throw new Error('Cet utilisateur n\'est pas un élève.');
-        }
-        const { error } = await supabase
-          .from('students')
-          .update({ instructor_id: profile.id } as never)
-          .eq('id', row.id);
-        if (error) throw error;
+      const res = data as { found: boolean; student_id?: string };
+      if (res.found) {
         return { kind: 'linked' as const, email };
       }
 
@@ -62,6 +53,9 @@ export function useInviteStudentByEmail() {
       });
       return { kind: 'shared' as const, email };
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['instructor-students'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['instructor-students'] });
+      qc.invalidateQueries({ queryKey: ['instructor-week-stats'] });
+    },
   });
 }
