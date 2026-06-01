@@ -30,31 +30,45 @@ Deno.serve(async (req) => {
 
   if (event.type === 'payment_intent.succeeded') {
     const intent = event.data.object as Stripe.PaymentIntent;
-    const studentId = intent.metadata.student_id;
-    const hours = Number(intent.metadata.hours);
 
-    await admin
+    // Idempotence : Stripe rejoue les events sur 5xx / timeout. On claim la
+    // ligne via un UPDATE conditionnel (neq succeeded) — atomique au niveau
+    // ligne. Si la ligne renvoie null on a déjà traité ce paiement, on ack
+    // sans recréditer le forfait.
+    const { data: claimed } = await admin
       .from('payments')
       .update({
         status: 'succeeded',
         paid_at: new Date().toISOString(),
       })
-      .eq('stripe_payment_intent_id', intent.id);
+      .eq('stripe_payment_intent_id', intent.id)
+      .neq('status', 'succeeded')
+      .select('student_id, hours_purchased')
+      .maybeSingle();
+
+    if (!claimed) {
+      return new Response('ok (already processed)', { status: 200 });
+    }
+
+    const { student_id, hours_purchased } = claimed as {
+      student_id: string;
+      hours_purchased: number;
+    };
 
     // Cumule au forfait élève
-    if (studentId && hours > 0) {
+    if (student_id && hours_purchased > 0) {
       const { data: s } = await admin
         .from('students')
         .select('package_total_hours, package_started_at')
-        .eq('id', studentId)
+        .eq('id', student_id)
         .single();
       await admin
         .from('students')
         .update({
-          package_total_hours: (s?.package_total_hours ?? 0) + hours,
+          package_total_hours: (s?.package_total_hours ?? 0) + hours_purchased,
           package_started_at: s?.package_started_at ?? new Date().toISOString(),
         })
-        .eq('id', studentId);
+        .eq('id', student_id);
     }
   } else if (event.type === 'payment_intent.payment_failed') {
     const intent = event.data.object as Stripe.PaymentIntent;

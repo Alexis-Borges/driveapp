@@ -10,6 +10,7 @@ import { useAuthStore } from '../../../stores/authStore';
 import { useRefresh } from '../../../hooks/useRefresh';
 import { useRealtimeLessons, useRealtimeInstructorSlots } from '../../../hooks/useRealtimeLessons';
 import { PAUSE_HOUR } from '../../../lib/planning';
+import { isActiveLesson } from '../../../lib/lessons';
 
 const TYPE_LABEL: Record<string, string> = {
   city: 'Ville',
@@ -39,7 +40,7 @@ export default function StudentPlanning() {
   const slots = useMemo(() => {
     const map: Record<number, SlotState> = {};
     for (const l of lessons as Lesson[]) {
-      if (l.status === 'cancelled' || l.status === 'auto_cancelled') continue;
+      if (!isActiveLesson(l.status)) continue;
       const h = new Date(l.scheduled_at).getHours();
       if (l.student_id == null) {
         map[h] = { kind: 'free' };

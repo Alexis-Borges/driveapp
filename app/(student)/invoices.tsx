@@ -7,6 +7,21 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../stores/authStore';
 
+// Conversion HTML → PDF côté mobile via expo-print : pas de service externe,
+// le système ouvre nativement un aperçu / dialogue d'enregistrement.
+// Fallback sur l'ouverture HTML brute si le module n'est pas dispo.
+async function presentInvoice(html: string) {
+  try {
+    const Print = require('expo-print') as typeof import('expo-print');
+    await Print.printAsync({ html });
+    return;
+  } catch {
+    // module absent ou non supporté → fallback HTML
+  }
+  const dataUri = 'data:text/html;base64,' + btoa(unescape(encodeURIComponent(html)));
+  await Linking.openURL(dataUri);
+}
+
 export default function StudentInvoices() {
   const router = useRouter();
   const profile = useAuthStore((s) => s.profile);
@@ -50,8 +65,7 @@ export default function StudentInvoices() {
         body: JSON.stringify({ payment_id: paymentId }),
       });
       const html = await res.text();
-      const dataUri = 'data:text/html;base64,' + btoa(unescape(encodeURIComponent(html)));
-      await Linking.openURL(dataUri);
+      await presentInvoice(html);
     } catch (e: unknown) {
       Alert.alert('Erreur', e instanceof Error ? e.message : 'Erreur');
     } finally {

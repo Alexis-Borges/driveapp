@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../stores/authStore';
 import type { Lesson } from '../../hooks/useLessons';
 import { PLANNING_HOURS } from '../../lib/planning';
+import { isActiveLesson } from '../../lib/lessons';
 
 const DAYS_FR = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 
@@ -47,7 +48,7 @@ export function WeekView({ weekStart, onPressLesson }: Props) {
     const map = new Map<string, Lesson>();
     for (const l of lessons) {
       // les leçons annulées libèrent le créneau
-      if (l.status === 'cancelled' || l.status === 'auto_cancelled') continue;
+      if (!isActiveLesson(l.status)) continue;
       const d = new Date(l.scheduled_at);
       const key = `${(d.getDay() + 6) % 7}-${d.getHours()}`;
       map.set(key, l);

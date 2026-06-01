@@ -12,6 +12,7 @@ import { useRefresh } from '../../../hooks/useRefresh';
 import { useRealtimeLessons } from '../../../hooks/useRealtimeLessons';
 import { useInstructorStudents } from '../../../hooks/useStudents';
 import { PAUSE_HOUR, PLANNING_HOURS, isLessonCritical } from '../../../lib/planning';
+import { isActiveLesson } from '../../../lib/lessons';
 
 const TYPE_LABEL: Record<string, string> = {
   city: 'Ville',
@@ -47,7 +48,7 @@ export default function InstructorPlanning() {
     const now = Date.now();
     for (const l of lessons as Lesson[]) {
       // ignore les leçons annulées (elles libèrent le créneau)
-      if (l.status === 'cancelled' || l.status === 'auto_cancelled') continue;
+      if (!isActiveLesson(l.status)) continue;
       const h = new Date(l.scheduled_at).getHours();
       const profileLink = (l as unknown as {
         students?: { profiles?: { first_name: string; last_name: string } | null } | null;
@@ -111,7 +112,7 @@ export default function InstructorPlanning() {
     const s = new Set<number>();
     s.add(PAUSE_HOUR);
     for (const l of lessons as Lesson[]) {
-      if (l.status === 'cancelled' || l.status === 'auto_cancelled') continue;
+      if (!isActiveLesson(l.status)) continue;
       s.add(new Date(l.scheduled_at).getHours());
     }
     return s;
