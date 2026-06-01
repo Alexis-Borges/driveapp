@@ -16,6 +16,9 @@ export type Lesson = {
   status: LessonStatus;
   feedback: string | null;
   rating: number | null;
+  student_comment: string | null;
+  cancelled_reason: string | null;
+  pickup_address: string | null;
 };
 
 function dayBounds(d: Date) {

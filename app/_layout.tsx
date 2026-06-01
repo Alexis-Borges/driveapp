@@ -41,7 +41,10 @@ function RootNav() {
       if (!inAuth && !inLegal) router.replace('/(auth)/login');
       return;
     }
-    if (session.user.id) identify(session.user.id, { role: profile?.role });
+    // Identify dès qu'on a l'id (attribution crash sur l'écran verify inclus).
+    // L'effet se rejoue quand `profile` charge → le rôle s'enrichit ensuite,
+    // donc pas de propriété figée à undefined.
+    if (session.user.id) identify(session.user.id, profile ? { role: profile.role } : undefined);
     // Email non vérifié → on bloque sur l'écran "verify"
     if (!session.user.email_confirmed_at && segments[1] !== 'verify') {
       router.replace('/(auth)/verify');
