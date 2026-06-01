@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { RefreshControl, ScrollView, Text, View } from 'react-native';
+import { RefreshControl, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '../../../stores/authStore';
@@ -15,6 +15,7 @@ import { LinkInstructorSheet } from '../../../components/student/LinkInstructorS
 import { EmptyState } from '../../../components/shared/EmptyState';
 import { Checklist } from '../../../components/shared/Checklist';
 import { Icon } from '../../../components/ui/Icon';
+import { KeyboardAwareScroll } from '../../../components/shared/KeyboardAwareScroll';
 import { SectionLabel } from '../../../components/shared/SectionLabel';
 import { useStudentBalance, useStudentPackage } from '../../../hooks/useBalance';
 import { useRefresh } from '../../../hooks/useRefresh';
@@ -70,7 +71,7 @@ export default function StudentHome() {
 
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={['top']}>
-      <ScrollView
+      <KeyboardAwareScroll
         contentContainerStyle={{ paddingBottom: 32 }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#00C896" />
@@ -219,7 +220,7 @@ export default function StudentHome() {
             rating={0}
           />
         )}
-      </ScrollView>
+      </KeyboardAwareScroll>
 
       <LinkInstructorSheet visible={linkOpen} onClose={() => setLinkOpen(false)} />
     </SafeAreaView>

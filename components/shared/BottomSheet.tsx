@@ -22,6 +22,8 @@ export function BottomSheet({ visible, onClose, children }: Props) {
           </View>
           <ScrollView
             keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="interactive"
+            automaticallyAdjustKeyboardInsets
             contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 16 }}
             style={{ maxHeight: 560 }}
           >

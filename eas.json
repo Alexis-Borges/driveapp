@@ -20,6 +20,12 @@
       },
       "ios": {
         "simulator": false
+      },
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://gaqivtanxcqcekfdzlfk.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_ouBbM4goaQwUCFtPf2UP4Q_p1_-2KGJ",
+        "EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY": "pk_test_51TSzSsJ3gMAx96yPiCxognyMa03B081qAWJA6Td9UWh75z6w4xa4XY1ovbMVDYIzNwbojJkljMkHwirKTvLAgdqz00MLbmLode",
+        "EXPO_PUBLIC_ENV": "preview"
       }
     },
     "production": {
