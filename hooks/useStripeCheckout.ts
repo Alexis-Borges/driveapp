@@ -1,6 +1,7 @@
 import { useStripe } from '@stripe/stripe-react-native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
+import { track } from '../lib/observability';
 
 type Plan = 'one_shot' | 'three_x';
 
@@ -40,7 +41,8 @@ export function useStripeCheckout() {
       }
       return true;
     },
-    onSuccess: () => {
+    onSuccess: (_data, params) => {
+      track('pack_purchased', { hours: params.hours, plan: params.plan });
       qc.invalidateQueries({ queryKey: ['student-balance'] });
       qc.invalidateQueries({ queryKey: ['student-package'] });
     },

@@ -13,6 +13,7 @@ import { Button } from '../../components/ui/Button';
 import { TextField } from '../../components/ui/TextField';
 import { supabase } from '../../lib/supabase';
 import { signupSchema, firstError } from '../../lib/validation';
+import { track } from '../../lib/observability';
 import type { UserRole } from '../../types/database';
 
 export default function Signup() {
@@ -69,6 +70,7 @@ export default function Signup() {
       Alert.alert('Inscription impossible', error.message);
       return;
     }
+    track('signup', { role, invited: !!invitedBy, has_referral: referral.trim().length > 0 });
     // Le trigger Postgres handle_new_user crée profiles + students/instructors.
   }
 

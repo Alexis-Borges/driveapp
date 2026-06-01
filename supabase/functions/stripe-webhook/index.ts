@@ -62,6 +62,23 @@ Deno.serve(async (req) => {
       .from('payments')
       .update({ status: 'failed' })
       .eq('stripe_payment_intent_id', intent.id);
+  } else if (event.type === 'payment_intent.processing') {
+    // Klarna Pay-in-3 : le paiement transite par "processing" avant
+    // confirmation. On le maintient en 'pending' (le forfait n'est crédité
+    // qu'au payment_intent.succeeded) sans jamais écraser un 'succeeded'.
+    const intent = event.data.object as Stripe.PaymentIntent;
+    await admin
+      .from('payments')
+      .update({ status: 'pending' })
+      .eq('stripe_payment_intent_id', intent.id)
+      .neq('status', 'succeeded');
+  } else if (event.type === 'payment_intent.canceled') {
+    const intent = event.data.object as Stripe.PaymentIntent;
+    await admin
+      .from('payments')
+      .update({ status: 'failed' })
+      .eq('stripe_payment_intent_id', intent.id)
+      .neq('status', 'succeeded');
   }
 
   return new Response('ok', { status: 200 });

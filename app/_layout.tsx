@@ -18,6 +18,7 @@ import { useAuthBootstrap } from '../hooks/useAuth';
 import { useAuthStore } from '../stores/authStore';
 import { usePushRegistration } from '../hooks/usePushNotifications';
 import { identify, initObservability, reset as resetObservability } from '../lib/observability';
+import { ErrorBoundary } from '../components/shared/ErrorBoundary';
 
 initObservability();
 
@@ -99,7 +100,9 @@ export default function RootLayout() {
         <QueryClientProvider client={queryClient}>
           <StripeProvider publishableKey={stripeKey} merchantIdentifier="merchant.com.driveapp.mobile">
             <StatusBar style="light" />
-            <RootNav />
+            <ErrorBoundary>
+              <RootNav />
+            </ErrorBoundary>
           </StripeProvider>
         </QueryClientProvider>
       </SafeAreaProvider>

@@ -8,6 +8,7 @@ import { SectionLabel } from '../../../components/shared/SectionLabel';
 import { useStudentPackage } from '../../../hooks/useBalance';
 import { useReferralStats } from '../../../hooks/useReferrals';
 import { useLinkedInstructorInfo } from '../../../hooks/useStripeConnect';
+import { track } from '../../../lib/observability';
 import type { IconName } from '../../../components/ui/Icon';
 
 type Pack = {
@@ -93,6 +94,7 @@ export default function StudentShop() {
                 const code = pkg?.referral_code ?? '';
                 if (!code) return;
                 await Clipboard.setStringAsync(code);
+                track('referral_code_copied');
                 Alert.alert('Copié', `Code ${code} copié dans le presse-papiers.`);
               }}
               className="bg-student rounded-md px-3 py-1 text-[11px] font-bold text-[#0a1a14]"

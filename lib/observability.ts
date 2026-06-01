@@ -41,6 +41,18 @@ export function track(event: string, props?: Record<string, unknown>) {
   posthogClient?.capture(event, props);
 }
 
+// Remonte une exception à Sentry (no-op si Sentry n'est pas initialisé).
+// Utilisé par l'ErrorBoundary global.
+export function captureException(error: unknown, context?: Record<string, unknown>) {
+  if (!sentryReady) return;
+  try {
+    const Sentry = require('@sentry/react-native') as typeof import('@sentry/react-native');
+    Sentry.captureException(error, context ? { extra: context } : undefined);
+  } catch {
+    // noop
+  }
+}
+
 export function identify(userId: string, props?: Record<string, unknown>) {
   if (sentryReady) {
     try {

@@ -5,6 +5,7 @@ import { Button } from '../../components/ui/Button';
 import { TextField } from '../../components/ui/TextField';
 import { supabase } from '../../lib/supabase';
 import { loginSchema, firstError } from '../../lib/validation';
+import { track } from '../../lib/observability';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -22,6 +23,7 @@ export default function Login() {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (error) Alert.alert('Connexion impossible', error.message);
+    else track('login');
   }
 
   return (

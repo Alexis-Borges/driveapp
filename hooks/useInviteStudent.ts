@@ -3,6 +3,7 @@ import * as Linking from 'expo-linking';
 import { Share } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../stores/authStore';
+import { track } from '../lib/observability';
 
 /**
  * Génère un deep link d'invitation et ouvre la feuille de partage système
@@ -20,6 +21,7 @@ export function useShareInviteLink() {
       await Share.share({
         message: `Salut ! Inscris-toi sur DriveApp pour suivre tes leçons avec moi : ${inviteUrl}`,
       });
+      track('invite_shared', { method: 'link' });
       return inviteUrl;
     },
   });

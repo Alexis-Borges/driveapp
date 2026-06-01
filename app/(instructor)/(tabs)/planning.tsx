@@ -11,7 +11,7 @@ import { WeekView } from '../../../components/instructor/WeekView';
 import { useRefresh } from '../../../hooks/useRefresh';
 import { useRealtimeLessons } from '../../../hooks/useRealtimeLessons';
 import { useInstructorStudents } from '../../../hooks/useStudents';
-import { PAUSE_HOUR, PLANNING_HOURS } from '../../../lib/planning';
+import { PAUSE_HOUR, PLANNING_HOURS, isLessonCritical } from '../../../lib/planning';
 
 const TYPE_LABEL: Record<string, string> = {
   city: 'Ville',
@@ -45,7 +45,6 @@ export default function InstructorPlanning() {
   const slots = useMemo(() => {
     const map: Record<number, SlotState> = {};
     const now = Date.now();
-    const HOUR = 60 * 60 * 1000;
     for (const l of lessons as Lesson[]) {
       // ignore les leçons annulées (elles libèrent le créneau)
       if (l.status === 'cancelled' || l.status === 'auto_cancelled') continue;
@@ -57,12 +56,12 @@ export default function InstructorPlanning() {
         map[h] = { kind: 'free' };
       } else {
         const studentBalance = balanceById.get(l.student_id) ?? 0;
-        const deltaH = (new Date(l.scheduled_at).getTime() - now) / HOUR;
-        const isCritical =
-          studentBalance < 0 &&
-          deltaH >= 0 &&
-          deltaH <= 48 &&
-          (l.status === 'pending' || l.status === 'confirmed');
+        const isCritical = isLessonCritical({
+          balanceHours: studentBalance,
+          scheduledAt: l.scheduled_at,
+          status: l.status,
+          now,
+        });
         const status: 'confirmed' | 'pending' | 'critical' = isCritical
           ? 'critical'
           : l.status === 'confirmed' || l.status === 'completed'

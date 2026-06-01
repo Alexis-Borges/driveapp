@@ -22,6 +22,7 @@ import { useInstructorReferralCount } from '../../../hooks/useReferrals';
 import { useRefresh } from '../../../hooks/useRefresh';
 import { useRealtimeLessons } from '../../../hooks/useRealtimeLessons';
 import { usePaymentReminder } from '../../../hooks/usePaymentReminder';
+import { isLessonCritical, isInAmberWindow } from '../../../lib/planning';
 
 function formatTime(iso: string) {
   const d = new Date(iso);
@@ -137,7 +138,6 @@ export default function InstructorHome() {
   }, [students]);
 
   const now = Date.now();
-  const HOUR = 60 * 60 * 1000;
 
   // Élèves avec séance dans la fenêtre 48-72h ET solde négatif → alerte amber
   const soonDueStudents = useMemo(() => {
@@ -148,8 +148,7 @@ export default function InstructorHome() {
           (l.status === 'pending' || l.status === 'confirmed')
       );
       if (!next) return false;
-      const delta = new Date(next.scheduled_at).getTime() - now;
-      return delta >= 48 * HOUR && delta <= 72 * HOUR;
+      return isInAmberWindow(next.scheduled_at, now);
     });
   }, [overdueStudents, today, now]);
 
@@ -241,13 +240,14 @@ export default function InstructorHome() {
                 students?: { profiles?: { first_name: string; last_name: string } | null } | null;
               }).students?.profiles;
               const studentBalance = l.student_id ? balanceById.get(l.student_id) ?? 0 : 0;
-              const deltaH = (new Date(l.scheduled_at).getTime() - now) / HOUR;
               const isCritical =
                 l.student_id != null &&
-                studentBalance < 0 &&
-                deltaH >= 0 &&
-                deltaH <= 48 &&
-                (l.status === 'pending' || l.status === 'confirmed');
+                isLessonCritical({
+                  balanceHours: studentBalance,
+                  scheduledAt: l.scheduled_at,
+                  status: l.status,
+                  now,
+                });
               const status = isCritical
                 ? 'critical'
                 : l.student_id === null

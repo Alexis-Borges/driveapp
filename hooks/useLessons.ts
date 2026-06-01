@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../stores/authStore';
+import { track } from '../lib/observability';
 
 export type LessonStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'auto_cancelled';
 export type LessonType = 'city' | 'highway' | 'parking' | 'evaluation' | 'mock_exam' | 'other';
@@ -108,7 +109,10 @@ export function useBookSlot() {
         .is('student_id', null);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['lessons'] }),
+    onSuccess: () => {
+      track('lesson_booked');
+      qc.invalidateQueries({ queryKey: ['lessons'] });
+    },
   });
 }
 
@@ -126,7 +130,10 @@ export function useUpdateLessonStatus() {
         .eq('id', params.id);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['lessons'] }),
+    onSuccess: (_data, params) => {
+      track('lesson_status_changed', { status: params.status });
+      qc.invalidateQueries({ queryKey: ['lessons'] });
+    },
   });
 }
 
