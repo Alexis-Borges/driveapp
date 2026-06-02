@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Alert, Linking, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { ScreenHeader } from '../../components/shared/ScreenHeader';
 import { useStudentInvoices } from '../../hooks/useInvoices';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
@@ -23,7 +23,6 @@ async function presentInvoice(html: string) {
 }
 
 export default function StudentInvoices() {
-  const router = useRouter();
   const profile = useAuthStore((s) => s.profile);
   const { data: invoices = [] } = useStudentInvoices();
   const [generating, setGenerating] = useState<string | null>(null);
@@ -75,15 +74,7 @@ export default function StudentInvoices() {
 
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={['top']}>
-      <View className="px-3 py-2 flex-row items-center gap-2 border-b border-border">
-        <Pressable
-          onPress={() => router.back()}
-          className="w-8 h-8 rounded-lg bg-card border border-border items-center justify-center"
-        >
-          <Text className="text-muted text-sm">‹</Text>
-        </Pressable>
-        <Text className="text-text text-base font-bold">Mes factures</Text>
-      </View>
+      <ScreenHeader title="Mes factures" />
 
       <ScrollView contentContainerStyle={{ paddingTop: 12, paddingBottom: 32 }}>
         {payments.length === 0 ? (

@@ -23,6 +23,7 @@ import { useRefresh } from '../../../hooks/useRefresh';
 import { useRealtimeLessons } from '../../../hooks/useRealtimeLessons';
 import { usePaymentReminder } from '../../../hooks/usePaymentReminder';
 import { isLessonCritical, isInAmberWindow } from '../../../lib/planning';
+import { typeLabel } from '../../../lib/lessons';
 
 function formatTime(iso: string) {
   const d = new Date(iso);
@@ -33,15 +34,6 @@ function todayLabel() {
   const d = new Date();
   return d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric' });
 }
-
-const TYPE_LABEL: Record<string, string> = {
-  city: 'Ville',
-  highway: 'Autoroute',
-  parking: 'Parking',
-  evaluation: 'Évaluation',
-  mock_exam: 'Examen blanc',
-  other: 'Autre',
-};
 
 export default function InstructorHome() {
   const profile = useAuthStore((s) => s.profile);
@@ -268,8 +260,8 @@ export default function InstructorHome() {
                   }
                   subtitle={
                     isCritical
-                      ? `${TYPE_LABEL[l.type] ?? l.type} · Annulation auto si impayé`
-                      : TYPE_LABEL[l.type] ?? l.type
+                      ? `${typeLabel(l.type)} · Annulation auto si impayé`
+                      : typeLabel(l.type)
                   }
                   status={status}
                 />

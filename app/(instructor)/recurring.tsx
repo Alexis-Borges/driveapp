@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { Alert, Pressable, ScrollView, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
 import { Button } from '../../components/ui/Button';
 import { BottomSheet } from '../../components/shared/BottomSheet';
 import { SectionLabel } from '../../components/shared/SectionLabel';
+import { ScreenHeader } from '../../components/shared/ScreenHeader';
 import { Icon } from '../../components/ui/Icon';
 import {
   useCreateRecurringSlot,
@@ -17,7 +17,6 @@ import { BOOKABLE_HOURS } from '../../lib/planning';
 const DAYS = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
 
 export default function RecurringSlots() {
-  const router = useRouter();
   const { data: rules = [] } = useRecurringSlots();
   const create = useCreateRecurringSlot();
   const toggle = useToggleRecurringSlot();
@@ -45,15 +44,7 @@ export default function RecurringSlots() {
 
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={['top']}>
-      <View className="px-3 py-2 flex-row items-center gap-2 border-b border-border">
-        <Pressable
-          onPress={() => router.back()}
-          className="w-8 h-8 rounded-lg bg-card border border-border items-center justify-center"
-        >
-          <Text className="text-muted text-sm">‹</Text>
-        </Pressable>
-        <Text className="text-text text-base font-bold">Créneaux récurrents</Text>
-      </View>
+      <ScreenHeader title="Créneaux récurrents" />
 
       <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
         <Text className="text-muted text-xs px-5 mt-3 leading-5">

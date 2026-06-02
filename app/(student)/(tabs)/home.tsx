@@ -28,15 +28,7 @@ import {
   useUpcomingEvaluation,
   useLastFeedbackForStudent,
 } from '../../../hooks/useLessons';
-
-const TYPE_LABEL: Record<string, string> = {
-  city: 'Ville',
-  highway: 'Autoroute',
-  parking: 'Parking',
-  evaluation: 'Évaluation',
-  mock_exam: 'Examen blanc',
-  other: 'Autre',
-};
+import { typeLabel } from '../../../lib/lessons';
 
 function formatLessonTime(iso: string) {
   const d = new Date(iso);
@@ -179,7 +171,7 @@ export default function StudentHome() {
           ) : nextLesson ? (
             <NextLessonCard
               number={1}
-              type={TYPE_LABEL[(nextLesson as { type: string }).type] ?? 'Séance'}
+              type={typeLabel((nextLesson as { type: string }).type)}
               time={formatLessonTime((nextLesson as { scheduled_at: string }).scheduled_at)}
               instructor={instructorName}
               status={

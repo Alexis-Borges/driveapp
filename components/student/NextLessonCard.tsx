@@ -1,5 +1,6 @@
 import { Text, View } from 'react-native';
 import { Badge } from '../ui/Badge';
+import { statusLabel } from '../../lib/lessons';
 
 type Props = {
   number: number;
@@ -22,7 +23,7 @@ export function NextLessonCard({ number, type, time, instructor, status }: Props
         </Text>
       </View>
       <Badge
-        label={status === 'confirmed' ? 'Confirmé' : 'En attente'}
+        label={statusLabel(status)}
         tone={status === 'confirmed' ? 'student' : 'warning'}
       />
     </View>

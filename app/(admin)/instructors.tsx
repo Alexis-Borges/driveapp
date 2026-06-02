@@ -1,14 +1,13 @@
 import { useState } from 'react';
 import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { SectionLabel } from '../../components/shared/SectionLabel';
+import { ScreenHeader } from '../../components/shared/ScreenHeader';
 import { useAdminInstructors, useVerifyInstructor } from '../../hooks/useAdminInstructors';
 
 export default function AdminInstructors() {
-  const router = useRouter();
   const [filter, setFilter] = useState<'unverified' | 'all'>('unverified');
   const { data: instructors = [], isLoading } = useAdminInstructors(filter);
   const verify = useVerifyInstructor();
@@ -39,15 +38,7 @@ export default function AdminInstructors() {
 
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={['top']}>
-      <View className="px-3 py-2 flex-row items-center gap-2 border-b border-border">
-        <Pressable
-          onPress={() => router.back()}
-          className="w-8 h-8 rounded-lg bg-card border border-border items-center justify-center"
-        >
-          <Text className="text-muted text-sm">‹</Text>
-        </Pressable>
-        <Text className="text-text text-base font-bold">Validation moniteurs</Text>
-      </View>
+      <ScreenHeader title="Validation moniteurs" />
 
       <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
         <View className="flex-row gap-1.5 px-5 pt-3 pb-1">

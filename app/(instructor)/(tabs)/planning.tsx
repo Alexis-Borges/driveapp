@@ -12,16 +12,7 @@ import { useRefresh } from '../../../hooks/useRefresh';
 import { useRealtimeLessons } from '../../../hooks/useRealtimeLessons';
 import { useInstructorStudents } from '../../../hooks/useStudents';
 import { PAUSE_HOUR, PLANNING_HOURS, isLessonCritical } from '../../../lib/planning';
-import { isActiveLesson } from '../../../lib/lessons';
-
-const TYPE_LABEL: Record<string, string> = {
-  city: 'Ville',
-  highway: 'Autoroute',
-  parking: 'Parking',
-  evaluation: 'Évaluation',
-  mock_exam: 'Examen blanc',
-  other: 'Autre',
-};
+import { isActiveLesson, typeLabel } from '../../../lib/lessons';
 
 export default function InstructorPlanning() {
   useRealtimeLessons();
@@ -69,8 +60,8 @@ export default function InstructorPlanning() {
             ? 'confirmed'
             : 'pending';
         const subtitle = isCritical
-          ? `${TYPE_LABEL[l.type] ?? l.type} · 1h · Annulation auto si impayé`
-          : `${TYPE_LABEL[l.type] ?? l.type} · 1h`;
+          ? `${typeLabel(l.type)} · 1h · Annulation auto si impayé`
+          : `${typeLabel(l.type)} · 1h`;
         map[h] = {
           kind: 'booked',
           tone: status === 'confirmed' ? 'student' : 'instructor',

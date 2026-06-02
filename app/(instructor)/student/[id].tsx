@@ -11,6 +11,7 @@ import { Badge } from '../../../components/ui/Badge';
 import { Button } from '../../../components/ui/Button';
 import { ProgressBar } from '../../../components/student/ProgressBar';
 import { SectionLabel } from '../../../components/shared/SectionLabel';
+import { ScreenHeader } from '../../../components/shared/ScreenHeader';
 import { CompetencesList } from '../../../components/shared/CompetencesList';
 import {
   useCompetencesCatalog,
@@ -158,16 +159,8 @@ export default function StudentDetail() {
 
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={['top']}>
+      <ScreenHeader title="Détail élève" />
       <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
-        <View className="px-3 py-2 flex-row items-center gap-2 border-b border-border">
-          <Pressable
-            onPress={() => router.back()}
-            className="w-8 h-8 rounded-lg bg-card border border-border items-center justify-center"
-          >
-            <Text className="text-muted text-sm">‹</Text>
-          </Pressable>
-          <Text className="text-text text-base font-bold">Détail élève</Text>
-        </View>
 
         <View className="items-center pt-5 pb-2 gap-2">
           <Avatar

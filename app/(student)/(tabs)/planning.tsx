@@ -4,22 +4,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AlertCard } from '../../../components/instructor/AlertCard';
 import { DaySelector } from '../../../components/shared/DaySelector';
 import { PlanningGrid, type SlotState } from '../../../components/shared/PlanningGrid';
-import { useStudentLessonsForDay, useBookSlot, useStudentCancelLesson, type Lesson } from '../../../hooks/useLessons';
+import { useStudentLessonsForDay, useStudentCancelLesson, type Lesson } from '../../../hooks/useLessons';
 import { useStudentBalance, useStudentPackage } from '../../../hooks/useBalance';
 import { useAuthStore } from '../../../stores/authStore';
 import { useRefresh } from '../../../hooks/useRefresh';
 import { useRealtimeLessons, useRealtimeInstructorSlots } from '../../../hooks/useRealtimeLessons';
 import { PAUSE_HOUR } from '../../../lib/planning';
-import { isActiveLesson } from '../../../lib/lessons';
-
-const TYPE_LABEL: Record<string, string> = {
-  city: 'Ville',
-  highway: 'Autoroute',
-  parking: 'Parking',
-  evaluation: 'Évaluation',
-  mock_exam: 'Examen blanc',
-  other: 'Autre',
-};
+import { isActiveLesson, typeLabel } from '../../../lib/lessons';
+import { BookSlotSheet } from '../../../components/student/BookSlotSheet';
 
 export default function StudentPlanning() {
   const profile = useAuthStore((s) => s.profile);
@@ -33,8 +25,8 @@ export default function StudentPlanning() {
     return d;
   });
   const { data: lessons = [] } = useStudentLessonsForDay(selected, pkg?.instructor_id ?? null);
-  const book = useBookSlot();
   const cancel = useStudentCancelLesson();
+  const [bookingSlot, setBookingSlot] = useState<Lesson | null>(null);
   const { refreshing, onRefresh } = useRefresh(['lessons', 'student-balance', 'student-package']);
 
   const slots = useMemo(() => {
@@ -47,7 +39,7 @@ export default function StudentPlanning() {
       } else if (l.student_id === profile?.id) {
         map[h] = {
           kind: 'mine',
-          title: `Ma séance — ${TYPE_LABEL[l.type] ?? 'Séance'}`,
+          title: `Ma séance — ${typeLabel(l.type)}`,
           subtitle: 'Avec ton moniteur · 1h',
           status: l.status === 'confirmed' ? 'confirmed' : 'pending',
         };
@@ -67,25 +59,13 @@ export default function StudentPlanning() {
     setSelected(d);
   }
 
-  async function reserveAt(hour: number) {
+  function reserveAt(hour: number) {
     const target = (lessons as Lesson[]).find((l) => {
       const h = new Date(l.scheduled_at).getHours();
       return h === hour && l.student_id == null;
     });
     if (!target) return;
-    if (balance && balance.balance_hours <= 0) {
-      Alert.alert(
-        'Solde insuffisant',
-        'Tu n\'as plus d\'heures disponibles. Achète un pack dans la Boutique.'
-      );
-      return;
-    }
-    try {
-      await book.mutateAsync(target.id);
-      Alert.alert('Demande envoyée', 'Ton moniteur reçoit la demande. Tu seras notifié de la validation.');
-    } catch (e: unknown) {
-      Alert.alert('Erreur', e instanceof Error ? e.message : 'Erreur');
-    }
+    setBookingSlot(target);
   }
 
   async function cancelMine(hour: number) {
@@ -191,6 +171,13 @@ export default function StudentPlanning() {
           onPressBooked={cancelMine}
         />
       </ScrollView>
+
+      <BookSlotSheet
+        visible={!!bookingSlot}
+        onClose={() => setBookingSlot(null)}
+        slot={bookingSlot}
+        balanceHours={balance?.balance_hours ?? 0}
+      />
     </SafeAreaView>
   );
 }

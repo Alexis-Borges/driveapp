@@ -1,20 +1,11 @@
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { ScreenHeader } from '../../components/shared/ScreenHeader';
 
 export default function Mentions() {
-  const router = useRouter();
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={['top']}>
-      <View className="px-3 py-2 flex-row items-center gap-2 border-b border-border">
-        <Pressable
-          onPress={() => router.back()}
-          className="w-8 h-8 rounded-lg bg-card border border-border items-center justify-center"
-        >
-          <Text className="text-muted text-sm">‹</Text>
-        </Pressable>
-        <Text className="text-text text-base font-bold">Mentions légales</Text>
-      </View>
+      <ScreenHeader title="Mentions légales" />
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
         <Text className="text-text text-sm font-bold mb-2">Éditeur</Text>
         <Text className="text-muted text-[12px] leading-5 mb-4">

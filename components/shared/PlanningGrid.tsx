@@ -1,6 +1,7 @@
 import { Pressable, Text, View } from 'react-native';
 import { Badge } from '../ui/Badge';
 import { PLANNING_HOURS } from '../../lib/planning';
+import { statusLabel } from '../../lib/lessons';
 
 export type SlotState =
   | { kind: 'free' }
@@ -79,7 +80,7 @@ function SlotCell({
         <Text className="text-student text-sm font-medium">{state.title}</Text>
         <Text className="text-muted2 text-[10px] mt-0.5">{state.subtitle}</Text>
         <View className="absolute right-2 top-1/2 -translate-y-1/2">
-          <Badge label={state.status === 'confirmed' ? 'Confirmé' : 'En attente'} tone={state.status === 'confirmed' ? 'student' : 'warning'} />
+          <Badge label={statusLabel(state.status === 'confirmed' ? 'confirmed' : 'pending')} tone={state.status === 'confirmed' ? 'student' : 'warning'} />
         </View>
       </Pressable>
     );
@@ -98,11 +99,7 @@ function SlotCell({
         ? 'warning'
         : state.tone;
   const label =
-    state.status === 'critical'
-      ? 'Critique'
-      : state.status === 'pending'
-        ? 'À valider'
-        : 'Confirmé';
+    state.status === 'critical' ? 'Critique' : statusLabel(state.status ?? 'pending');
   return (
     <Pressable
       onPress={onPressBooked}

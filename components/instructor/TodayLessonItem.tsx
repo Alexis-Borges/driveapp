@@ -11,8 +11,8 @@ type Props = {
 };
 
 const cfg = {
-  confirmed: { bar: 'bg-student', label: 'Confirmé', tone: 'student' as const, crit: false },
-  pending: { bar: 'bg-warning', label: 'À valider', tone: 'warning' as const, crit: false },
+  confirmed: { bar: 'bg-student', label: 'Confirmée', tone: 'student' as const, crit: false },
+  pending: { bar: 'bg-warning', label: 'En attente', tone: 'warning' as const, crit: false },
   free: { bar: 'bg-border', label: 'Libre', tone: 'neutral' as const, crit: false },
   critical: { bar: 'bg-danger', label: 'Critique', tone: 'danger' as const, crit: true },
 };

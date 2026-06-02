@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
 import { Button } from '../../components/ui/Button';
 import { BottomSheet } from '../../components/shared/BottomSheet';
 import { SectionLabel } from '../../components/shared/SectionLabel';
+import { ScreenHeader } from '../../components/shared/ScreenHeader';
 import { Icon } from '../../components/ui/Icon';
 import { useCreateLeave, useDeleteLeave, useInstructorLeaves } from '../../hooks/useLeaves';
 
@@ -16,7 +16,6 @@ function dayInDays(n: number, hour = 8): Date {
 }
 
 export default function Leaves() {
-  const router = useRouter();
   const { data: leaves = [] } = useInstructorLeaves();
   const create = useCreateLeave();
   const del = useDeleteLeave();
@@ -53,15 +52,7 @@ export default function Leaves() {
 
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={['top']}>
-      <View className="px-3 py-2 flex-row items-center gap-2 border-b border-border">
-        <Pressable
-          onPress={() => router.back()}
-          className="w-8 h-8 rounded-lg bg-card border border-border items-center justify-center"
-        >
-          <Text className="text-muted text-sm">‹</Text>
-        </Pressable>
-        <Text className="text-text text-base font-bold">Mes congés</Text>
-      </View>
+      <ScreenHeader title="Mes congés" />
 
       <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
         <Text className="text-muted text-xs px-5 mt-3 leading-5">
