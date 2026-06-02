@@ -2,6 +2,7 @@ import { useStripe } from '@stripe/stripe-react-native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { track } from '../lib/observability';
+import { haptics } from '../lib/haptics';
 
 type Plan = 'one_shot' | 'three_x';
 
@@ -42,9 +43,13 @@ export function useStripeCheckout() {
       return true;
     },
     onSuccess: (_data, params) => {
+      haptics.success();
       track('pack_purchased', { hours: params.hours, plan: params.plan });
       qc.invalidateQueries({ queryKey: ['student-balance'] });
       qc.invalidateQueries({ queryKey: ['student-package'] });
+    },
+    onError: () => {
+      haptics.error();
     },
   });
 }

@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../stores/authStore';
 import { track } from '../lib/observability';
+import { haptics } from '../lib/haptics';
 
 export type LessonStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'auto_cancelled';
 export type LessonType = 'city' | 'highway' | 'parking' | 'evaluation' | 'mock_exam' | 'other';
@@ -112,8 +113,33 @@ export function useBookSlot() {
         .is('student_id', null);
       if (error) throw error;
     },
+    // Optimistic : on patch immédiatement le créneau dans le cache pour que
+    // l'UI bouge sans attendre Supabase. Rollback automatique en onError.
+    onMutate: async (lessonId) => {
+      if (!profile) return { previous: [] as [readonly unknown[], unknown][] };
+      await qc.cancelQueries({ queryKey: ['lessons'] });
+      const previous = qc.getQueriesData({ queryKey: ['lessons'] });
+      qc.setQueriesData({ queryKey: ['lessons'] }, (old: unknown) => {
+        if (!Array.isArray(old)) return old;
+        return (old as Array<{ id: string; student_id: string | null; status: string }>).map((l) =>
+          l.id === lessonId && l.student_id == null
+            ? { ...l, student_id: profile.id, status: 'pending' }
+            : l
+        );
+      });
+      haptics.success();
+      return { previous };
+    },
+    onError: (_err, _vars, ctx) => {
+      haptics.error();
+      if (ctx?.previous) {
+        for (const [key, data] of ctx.previous) qc.setQueryData(key, data);
+      }
+    },
     onSuccess: () => {
       track('lesson_booked');
+    },
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: ['lessons'] });
     },
   });
@@ -133,8 +159,39 @@ export function useUpdateLessonStatus() {
         .eq('id', params.id);
       if (error) throw error;
     },
+    onMutate: async (params) => {
+      await qc.cancelQueries({ queryKey: ['lessons'] });
+      const previous = qc.getQueriesData({ queryKey: ['lessons'] });
+      qc.setQueriesData({ queryKey: ['lessons'] }, (old: unknown) => {
+        if (!Array.isArray(old)) return old;
+        return (old as Array<{ id: string; status: string; cancelled_reason?: string | null }>).map(
+          (l) =>
+            l.id === params.id
+              ? {
+                  ...l,
+                  status: params.status,
+                  ...(params.cancelled_reason !== undefined
+                    ? { cancelled_reason: params.cancelled_reason }
+                    : {}),
+                }
+              : l
+        );
+      });
+      // confirmation = succès, annulation = warning
+      if (params.status === 'confirmed' || params.status === 'completed') haptics.success();
+      else if (params.status === 'cancelled' || params.status === 'auto_cancelled') haptics.warning();
+      return { previous };
+    },
+    onError: (_err, _vars, ctx) => {
+      haptics.error();
+      if (ctx?.previous) {
+        for (const [key, data] of ctx.previous) qc.setQueryData(key, data);
+      }
+    },
     onSuccess: (_data, params) => {
       track('lesson_status_changed', { status: params.status });
+    },
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: ['lessons'] });
     },
   });
