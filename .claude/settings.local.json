@@ -10,7 +10,13 @@
       "Bash(git reset *)",
       "Bash(npm install *)",
       "Bash(npx expo *)",
-      "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\(JSON.stringify\\(p.scripts,null,2\\)\\)\")"
+      "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\(JSON.stringify\\(p.scripts,null,2\\)\\)\")",
+      "Bash(npx eas-cli *)",
+      "Bash(git checkout *)",
+      "Bash(grep -q \"Metro waiting\\\\|exp://\\\\|Logs for\" \"C:\\\\Users\\\\alexi\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-alexi-driveapp\\\\a1c25fa2-39bb-41ab-adb5-17754953b72a\\\\tasks\\\\bte208nnp.output\")",
+      "Bash(netstat -ano)",
+      "Bash(tasklist)",
+      "Bash(npx tsc *)"
     ]
   }
 }

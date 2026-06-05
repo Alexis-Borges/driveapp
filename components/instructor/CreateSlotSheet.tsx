@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { BottomSheet } from '../shared/BottomSheet';
 import { Button } from '../ui/Button';
@@ -11,27 +11,33 @@ type Props = {
   onClose: () => void;
   date: Date;
   takenHours: Set<number>;
+  initialHour?: number | null;
 };
 
-const TYPES: { value: LessonType; label: string; icon: IconName }[] = [
-  { value: 'city', label: 'Ville', icon: 'pin' },
-  { value: 'highway', label: 'Autoroute', icon: 'car' },
-  { value: 'parking', label: 'Parking', icon: 'home' },
-  { value: 'evaluation', label: 'Évaluation', icon: 'clipboard' },
-  { value: 'mock_exam', label: 'Examen blanc', icon: 'graduation' },
-  { value: 'other', label: 'Autre', icon: 'more' },
+const TYPES: { value: LessonType; label: string; desc: string; icon: IconName }[] = [
+  { value: 'city', label: 'Ville', desc: 'Conduite urbaine, intersections, priorités', icon: 'pin' },
+  { value: 'highway', label: 'Autoroute', desc: 'Insertion, dépassement, vitesse', icon: 'car' },
+  { value: 'parking', label: 'Manœuvres', desc: 'Créneau, bataille, demi-tour', icon: 'home' },
+  { value: 'evaluation', label: 'Évaluation', desc: 'Bilan de niveau de l\'élève', icon: 'clipboard' },
+  { value: 'mock_exam', label: 'Examen blanc', desc: 'Simulation des conditions d\'examen', icon: 'graduation' },
+  { value: 'other', label: 'Autre', desc: 'Séance personnalisée', icon: 'more' },
 ];
 
-export function CreateSlotSheet({ visible, onClose, date, takenHours }: Props) {
+export function CreateSlotSheet({ visible, onClose, date, takenHours, initialHour }: Props) {
   const create = useCreateSlot();
   const [hour, setHour] = useState<number | null>(null);
   const [type, setType] = useState<LessonType>('city');
   const [pickup, setPickup] = useState('');
 
   const available = useMemo(
-    () => BOOKABLE_HOURS.filter((h) => !takenHours.has(h)),
-    [takenHours]
+    () => BOOKABLE_HOURS.filter((h) => !takenHours.has(h) || h === initialHour),
+    [takenHours, initialHour]
   );
+
+  // Pré-sélectionne l'heure tapée dans la grille à l'ouverture.
+  useEffect(() => {
+    if (visible) setHour(initialHour ?? null);
+  }, [visible, initialHour]);
 
   async function submit() {
     if (hour == null) {
@@ -48,6 +54,7 @@ export function CreateSlotSheet({ visible, onClose, date, takenHours }: Props) {
       });
       setHour(null);
       setPickup('');
+      setType('city');
       onClose();
     } catch (e: unknown) {
       Alert.alert('Erreur', e instanceof Error ? e.message : 'Erreur');
@@ -62,7 +69,11 @@ export function CreateSlotSheet({ visible, onClose, date, takenHours }: Props) {
       </Text>
 
       <Text className="text-muted2 text-[10px] uppercase tracking-wider mb-1.5">Heure</Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, paddingBottom: 12 }}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ gap: 6, paddingBottom: 12 }}
+      >
         {available.length === 0 ? (
           <Text className="text-muted2 text-xs">Toutes les heures sont prises.</Text>
         ) : (
@@ -82,26 +93,43 @@ export function CreateSlotSheet({ visible, onClose, date, takenHours }: Props) {
         )}
       </ScrollView>
 
-      <Text className="text-muted2 text-[10px] uppercase tracking-wider mb-1.5 mt-2">Type</Text>
-      <View className="flex-row flex-wrap gap-1.5 mb-4">
-        {TYPES.map((t) => (
-          <Pressable
-            key={t.value}
-            onPress={() => setType(t.value)}
-            className={`px-3 py-2 rounded-xl border flex-row items-center gap-1.5 ${
-              type === t.value ? 'bg-instructor/20 border-instructor' : 'bg-card border-border'
-            }`}
-          >
-            <Icon
-              name={t.icon}
-              size={13}
-              color={type === t.value ? '#7C75FF' : '#EEEEF0'}
-            />
-            <Text className={type === t.value ? 'text-instructor font-bold text-xs' : 'text-text text-xs'}>
-              {t.label}
-            </Text>
-          </Pressable>
-        ))}
+      <Text className="text-muted2 text-[10px] uppercase tracking-wider mb-1.5 mt-2">
+        Type de séance
+      </Text>
+      <View className="gap-1.5 mb-4">
+        {TYPES.map((t) => {
+          const sel = type === t.value;
+          return (
+            <Pressable
+              key={t.value}
+              onPress={() => setType(t.value)}
+              className={`rounded-2xl border px-3 py-2.5 flex-row items-center gap-3 ${
+                sel ? 'bg-instructor/15 border-instructor' : 'bg-card border-border'
+              }`}
+            >
+              <View
+                className={`w-9 h-9 rounded-xl items-center justify-center ${
+                  sel ? 'bg-instructor/25' : 'bg-card2'
+                }`}
+              >
+                <Icon name={t.icon} size={17} color={sel ? '#A09BFF' : '#878D9A'} />
+              </View>
+              <View className="flex-1">
+                <Text className={`text-sm font-bold ${sel ? 'text-instructor' : 'text-text'}`}>
+                  {t.label}
+                </Text>
+                <Text className="text-muted2 text-[10px] mt-0.5">{t.desc}</Text>
+              </View>
+              <View
+                className={`w-4 h-4 rounded-full border-2 items-center justify-center ${
+                  sel ? 'border-instructor' : 'border-border'
+                }`}
+              >
+                {sel ? <View className="w-2 h-2 rounded-full bg-instructor" /> : null}
+              </View>
+            </Pressable>
+          );
+        })}
       </View>
 
       <Text className="text-muted2 text-[10px] uppercase tracking-wider mb-1.5">

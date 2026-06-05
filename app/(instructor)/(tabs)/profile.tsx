@@ -67,6 +67,11 @@ export default function InstructorProfile() {
 
         <SectionLabel>Paiements</SectionLabel>
         <StripeConnectCard />
+        <NavRow
+          icon="trending"
+          label="Mes revenus"
+          onPress={() => router.push('/(instructor)/revenue')}
+        />
 
         <SectionLabel>Mon activité</SectionLabel>
         <NavRow

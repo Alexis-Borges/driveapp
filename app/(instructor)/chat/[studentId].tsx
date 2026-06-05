@@ -14,7 +14,7 @@ export default function InstructorChat() {
   const router = useRouter();
   const profile = useAuthStore((s) => s.profile);
   const { data: messages = [] } = useConversation(studentId ?? null);
-  const send = useSendMessage();
+  const send = useSendMessage(studentId ?? null);
   const markRead = useMarkRead(studentId ?? null);
   const scrollRef = useRef<ScrollView>(null);
 

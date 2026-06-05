@@ -1,46 +1,57 @@
-import { useState } from 'react';
-import { Alert, Pressable, ScrollView, Switch, Text, View } from 'react-native';
+import { useMemo } from 'react';
+import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button } from '../../components/ui/Button';
-import { BottomSheet } from '../../components/shared/BottomSheet';
 import { SectionLabel } from '../../components/shared/SectionLabel';
 import { ScreenHeader } from '../../components/shared/ScreenHeader';
-import { Icon } from '../../components/ui/Icon';
 import {
   useCreateRecurringSlot,
   useDeleteRecurringSlot,
   useRecurringSlots,
-  useToggleRecurringSlot,
 } from '../../hooks/useRecurringSlots';
 import { BOOKABLE_HOURS } from '../../lib/planning';
+import type { RecurringSlotRow } from '../../types/database';
 
-const DAYS = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+// Lundi → Samedi (les auto-écoles travaillent rarement le dimanche).
+const DAYS = [
+  { idx: 1, label: 'Lun' },
+  { idx: 2, label: 'Mar' },
+  { idx: 3, label: 'Mer' },
+  { idx: 4, label: 'Jeu' },
+  { idx: 5, label: 'Ven' },
+  { idx: 6, label: 'Sam' },
+];
+
+function keyOf(weekday: number, hour: number) {
+  return `${weekday}-${hour}`;
+}
 
 export default function RecurringSlots() {
   const { data: rules = [] } = useRecurringSlots();
   const create = useCreateRecurringSlot();
-  const toggle = useToggleRecurringSlot();
   const del = useDeleteRecurringSlot();
 
-  const [open, setOpen] = useState(false);
-  const [day, setDay] = useState(1);
-  const [hour, setHour] = useState(10);
+  const byKey = useMemo(() => {
+    const m = new Map<string, RecurringSlotRow>();
+    for (const r of rules) m.set(keyOf(r.weekday, r.hour), r);
+    return m;
+  }, [rules]);
 
-  async function add() {
-    try {
-      await create.mutateAsync({ weekday: day, hour });
-      setOpen(false);
-    } catch (e: unknown) {
-      Alert.alert('Impossible', e instanceof Error ? e.message : 'Erreur');
+  function toggleCell(weekday: number, hour: number) {
+    const existing = byKey.get(keyOf(weekday, hour));
+    if (existing) {
+      del.mutate(existing.id);
+    } else {
+      create.mutate(
+        { weekday, hour },
+        {
+          onError: (e: unknown) =>
+            Alert.alert('Impossible', e instanceof Error ? e.message : 'Erreur'),
+        }
+      );
     }
   }
 
-  function confirmDelete(id: string) {
-    Alert.alert('Supprimer cette règle ?', 'Les créneaux déjà créés ne seront pas supprimés.', [
-      { text: 'Annuler', style: 'cancel' },
-      { text: 'Supprimer', style: 'destructive', onPress: () => del.mutate(id) },
-    ]);
-  }
+  const activeCount = rules.length;
 
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={['top']}>
@@ -48,86 +59,58 @@ export default function RecurringSlots() {
 
       <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
         <Text className="text-muted text-xs px-5 mt-3 leading-5">
-          Définis tes disponibilités hebdomadaires. Les créneaux libres seront générés
-          automatiquement chaque dimanche soir pour les 4 prochaines semaines.
+          Appuie sur une case pour définir tes disponibilités hebdomadaires. Les créneaux
+          libres seront générés automatiquement chaque dimanche soir pour les 4 prochaines
+          semaines.
         </Text>
 
-        <SectionLabel>Mes règles ({rules.length})</SectionLabel>
-        {rules.length === 0 ? (
-          <Text className="text-muted2 text-xs px-5">Aucune règle. Ajoute ta première en bas.</Text>
-        ) : (
-          rules.map((r) => (
-            <View
-              key={r.id}
-              className="mx-5 mb-1.5 bg-card border border-border rounded-2xl px-3 py-2.5 flex-row items-center justify-between"
-            >
-              <View className="flex-1">
-                <Text className="text-text text-sm font-bold">
-                  {DAYS[r.weekday]} · {String(r.hour).padStart(2, '0')}h00
-                </Text>
-                <Text className="text-muted2 text-[10px] mt-0.5">{r.type}</Text>
+        <SectionLabel>Ma semaine type · {activeCount} créneaux</SectionLabel>
+
+        <View className="mx-5 bg-card border border-border rounded-2xl p-2.5">
+          {/* en-tête jours */}
+          <View className="flex-row mb-1.5">
+            <View style={{ width: 34 }} />
+            {DAYS.map((d) => (
+              <View key={d.idx} className="flex-1 items-center">
+                <Text className="text-muted2 text-[10px] font-bold uppercase">{d.label}</Text>
               </View>
-              <Switch
-                value={r.active}
-                onValueChange={(v) => toggle.mutate({ id: r.id, active: v })}
-                trackColor={{ false: '#2A2D33', true: '#7C75FF' }}
-              />
-              <Pressable onPress={() => confirmDelete(r.id)} className="ml-3">
-                <Icon name="trash" size={16} color="#FF4F4F" />
-              </Pressable>
-            </View>
-          ))
-        )}
+            ))}
+          </View>
 
-        <View className="px-5 mt-4">
-          <Button
-            label="+ Ajouter une règle"
-            variant="instructor"
-            onPress={() => setOpen(true)}
-          />
-        </View>
-      </ScrollView>
-
-      <BottomSheet visible={open} onClose={() => setOpen(false)}>
-        <Text className="text-text text-base font-bold mb-1">Nouveau créneau récurrent</Text>
-        <Text className="text-muted text-xs mb-4">Choisis le jour et l'heure.</Text>
-
-        <Text className="text-muted2 text-[10px] uppercase tracking-wider mb-1.5">Jour</Text>
-        <View className="flex-row gap-1.5 mb-3">
-          {DAYS.map((d, i) => (
-            <Pressable
-              key={d}
-              onPress={() => setDay(i)}
-              className={`flex-1 py-2 rounded-xl border items-center ${
-                day === i ? 'bg-instructor border-instructor' : 'bg-card border-border'
-              }`}
-            >
-              <Text className={day === i ? 'text-white font-bold text-xs' : 'text-text text-xs'}>
-                {d}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-
-        <Text className="text-muted2 text-[10px] uppercase tracking-wider mb-1.5">Heure</Text>
-        <View className="flex-row flex-wrap gap-1.5 mb-4">
+          {/* lignes heures */}
           {BOOKABLE_HOURS.map((h) => (
-            <Pressable
-              key={h}
-              onPress={() => setHour(h)}
-              className={`px-3 py-2 rounded-xl border ${
-                hour === h ? 'bg-instructor border-instructor' : 'bg-card border-border'
-              }`}
-            >
-              <Text className={hour === h ? 'text-white font-bold text-xs' : 'text-text text-xs'}>
+            <View key={h} className="flex-row items-center mb-1">
+              <Text className="font-mono text-[10px] text-muted2 text-right" style={{ width: 30 }}>
                 {String(h).padStart(2, '0')}h
               </Text>
-            </Pressable>
+              {DAYS.map((d) => {
+                const active = byKey.has(keyOf(d.idx, h));
+                return (
+                  <View key={d.idx} className="flex-1 items-center">
+                    <Pressable
+                      onPress={() => toggleCell(d.idx, h)}
+                      className={`w-7 h-7 rounded-lg items-center justify-center ${
+                        active ? 'bg-instructor' : 'bg-card2 border border-border'
+                      }`}
+                    >
+                      {active ? (
+                        <View className="w-2 h-2 rounded-full bg-white" />
+                      ) : null}
+                    </Pressable>
+                  </View>
+                );
+              })}
+            </View>
           ))}
         </View>
 
-        <Button label="Créer la règle" variant="instructor" onPress={add} loading={create.isPending} />
-      </BottomSheet>
+        <View className="mx-5 mt-3 flex-row items-center gap-2">
+          <View className="w-3 h-3 rounded bg-instructor" />
+          <Text className="text-muted2 text-[11px]">Disponible chaque semaine</Text>
+          <View className="w-3 h-3 rounded bg-card2 border border-border ml-3" />
+          <Text className="text-muted2 text-[11px]">Fermé</Text>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }

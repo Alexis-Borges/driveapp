@@ -5,15 +5,9 @@ import { Button } from '../../components/ui/Button';
 import { BottomSheet } from '../../components/shared/BottomSheet';
 import { SectionLabel } from '../../components/shared/SectionLabel';
 import { ScreenHeader } from '../../components/shared/ScreenHeader';
+import { Calendar } from '../../components/shared/Calendar';
 import { Icon } from '../../components/ui/Icon';
 import { useCreateLeave, useDeleteLeave, useInstructorLeaves } from '../../hooks/useLeaves';
-
-function dayInDays(n: number, hour = 8): Date {
-  const d = new Date();
-  d.setDate(d.getDate() + n);
-  d.setHours(hour, 0, 0, 0);
-  return d;
-}
 
 export default function Leaves() {
   const { data: leaves = [] } = useInstructorLeaves();
@@ -21,27 +15,44 @@ export default function Leaves() {
   const del = useDeleteLeave();
 
   const [open, setOpen] = useState(false);
-  const [start, setStart] = useState(() => dayInDays(1, 8));
-  const [end, setEnd] = useState(() => dayInDays(1, 20));
+  const [start, setStart] = useState<Date | null>(null);
+  const [end, setEnd] = useState<Date | null>(null);
   const [reason, setReason] = useState('');
 
+  function resetForm() {
+    setStart(null);
+    setEnd(null);
+    setReason('');
+  }
+
   async function add() {
-    if (end <= start) {
-      Alert.alert('Plage invalide', 'La fin doit être après le début.');
+    if (!start) {
+      Alert.alert('Choisis une date de début');
       return;
     }
+    // Si une seule date est choisie, le congé couvre la journée entière.
+    const s = new Date(start);
+    s.setHours(0, 0, 0, 0);
+    const e = new Date(end ?? start);
+    e.setHours(23, 59, 0, 0);
     try {
       await create.mutateAsync({
-        starts_at: start.toISOString(),
-        ends_at: end.toISOString(),
+        starts_at: s.toISOString(),
+        ends_at: e.toISOString(),
         reason: reason.trim() || undefined,
       });
-      setReason('');
+      resetForm();
       setOpen(false);
-    } catch (e: unknown) {
-      Alert.alert('Erreur', e instanceof Error ? e.message : 'Erreur');
+    } catch (err: unknown) {
+      Alert.alert('Erreur', err instanceof Error ? err.message : 'Erreur');
     }
   }
+
+  const rangeLabel = start
+    ? end && end.getTime() !== start.getTime()
+      ? `${start.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} → ${end.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}`
+      : `${start.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })} (journée)`
+    : 'Sélectionne une ou deux dates';
 
   function confirmDelete(id: string) {
     Alert.alert('Supprimer ce congé ?', undefined, [
@@ -97,66 +108,37 @@ export default function Leaves() {
         )}
 
         <View className="px-5 mt-4">
-          <Button label="+ Ajouter un congé" variant="instructor" onPress={() => setOpen(true)} />
+          <Button
+            label="+ Ajouter un congé"
+            variant="instructor"
+            onPress={() => {
+              resetForm();
+              setOpen(true);
+            }}
+          />
         </View>
       </ScrollView>
 
       <BottomSheet visible={open} onClose={() => setOpen(false)}>
         <Text className="text-text text-base font-bold mb-1">Nouveau congé</Text>
-        <Text className="text-muted text-xs mb-3">Choisis une plage rapide.</Text>
+        <Text className="text-muted text-xs mb-3">
+          Tape une date pour une journée, ou deux dates pour une plage.
+        </Text>
 
-        <View className="flex-row gap-1.5 mb-3">
-          <Pressable
-            onPress={() => {
-              setStart(dayInDays(1, 0));
-              setEnd(dayInDays(1, 23));
-            }}
-            className="flex-1 py-2 rounded-xl bg-card border border-border items-center"
-          >
-            <Text className="text-text text-xs font-bold">Demain</Text>
-          </Pressable>
-          <Pressable
-            onPress={() => {
-              setStart(dayInDays(7, 0));
-              setEnd(dayInDays(14, 23));
-            }}
-            className="flex-1 py-2 rounded-xl bg-card border border-border items-center"
-          >
-            <Text className="text-text text-xs font-bold">1 semaine</Text>
-          </Pressable>
-          <Pressable
-            onPress={() => {
-              setStart(dayInDays(7, 0));
-              setEnd(dayInDays(21, 23));
-            }}
-            className="flex-1 py-2 rounded-xl bg-card border border-border items-center"
-          >
-            <Text className="text-text text-xs font-bold">2 semaines</Text>
-          </Pressable>
-        </View>
+        <Calendar
+          mode="range"
+          rangeStart={start}
+          rangeEnd={end}
+          onRangeChange={(s, e) => {
+            setStart(s);
+            setEnd(e);
+          }}
+          variant="instructor"
+        />
 
-        <View className="bg-card2 border border-border rounded-2xl px-3 py-3 mb-3">
-          <Text className="text-muted2 text-[9px] uppercase tracking-wider mb-0.5">Du</Text>
-          <Text className="text-text text-sm font-medium">
-            {start.toLocaleString('fr-FR', {
-              weekday: 'short',
-              day: 'numeric',
-              month: 'long',
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
-          </Text>
-          <View className="h-2" />
-          <Text className="text-muted2 text-[9px] uppercase tracking-wider mb-0.5">Au</Text>
-          <Text className="text-text text-sm font-medium">
-            {end.toLocaleString('fr-FR', {
-              weekday: 'short',
-              day: 'numeric',
-              month: 'long',
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
-          </Text>
+        <View className="bg-card2 border border-border rounded-2xl px-3 py-2.5 my-3 flex-row items-center gap-2">
+          <Icon name="calendar" size={16} color="#7C75FF" />
+          <Text className="text-text text-sm font-medium flex-1">{rangeLabel}</Text>
         </View>
 
         <TextInput
@@ -167,7 +149,13 @@ export default function Leaves() {
           className="bg-card2 border border-border rounded-2xl px-3 py-2.5 text-text mb-3"
         />
 
-        <Button label="Bloquer" variant="instructor" onPress={add} loading={create.isPending} />
+        <Button
+          label="Bloquer ce congé"
+          variant="instructor"
+          onPress={add}
+          loading={create.isPending}
+          disabled={!start}
+        />
       </BottomSheet>
     </SafeAreaView>
   );

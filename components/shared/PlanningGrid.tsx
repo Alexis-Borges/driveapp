@@ -5,6 +5,7 @@ import { statusLabel } from '../../lib/lessons';
 
 export type SlotState =
   | { kind: 'free' }
+  | { kind: 'add' }
   | { kind: 'unavail'; reason?: string }
   | { kind: 'booked'; tone: 'student' | 'instructor'; title: string; subtitle: string; status?: 'confirmed' | 'pending' | 'critical' }
   | { kind: 'mine'; title: string; subtitle: string; status: 'confirmed' | 'pending' };
@@ -15,9 +16,10 @@ type Props = {
   variant: 'instructor' | 'student';
   onPressFree?: (hour: number) => void;
   onPressBooked?: (hour: number) => void;
+  onPressAdd?: (hour: number) => void;
 };
 
-export function PlanningGrid({ hours = PLANNING_HOURS, slots, variant, onPressFree, onPressBooked }: Props) {
+export function PlanningGrid({ hours = PLANNING_HOURS, slots, variant, onPressFree, onPressBooked, onPressAdd }: Props) {
   return (
     <View className="px-5 gap-1.5">
       {hours.map((h) => {
@@ -31,6 +33,7 @@ export function PlanningGrid({ hours = PLANNING_HOURS, slots, variant, onPressFr
               variant={variant}
               onPressFree={() => onPressFree?.(h)}
               onPressBooked={() => onPressBooked?.(h)}
+              onPressAdd={() => onPressAdd?.(h)}
             />
           </View>
         );
@@ -44,12 +47,25 @@ function SlotCell({
   variant,
   onPressFree,
   onPressBooked,
+  onPressAdd,
 }: {
   state: SlotState;
   variant: 'instructor' | 'student';
   onPressFree: () => void;
   onPressBooked: () => void;
+  onPressAdd: () => void;
 }) {
+  if (state.kind === 'add') {
+    return (
+      <Pressable
+        onPress={onPressAdd}
+        className="flex-1 min-h-[48px] rounded-xl border border-dashed border-border px-3 py-2 justify-center"
+      >
+        <Text className="text-muted text-sm font-medium">+ Ajouter un créneau</Text>
+        <Text className="text-muted2 text-[10px] mt-0.5">Appuyer pour ouvrir ce créneau</Text>
+      </Pressable>
+    );
+  }
   if (state.kind === 'free') {
     return (
       <Pressable

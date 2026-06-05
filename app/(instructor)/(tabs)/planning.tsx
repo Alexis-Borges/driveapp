@@ -26,6 +26,7 @@ export default function InstructorPlanning() {
   const { data: studentsList = [] } = useInstructorStudents();
   const [actionLesson, setActionLesson] = useState<Lesson | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const [createHour, setCreateHour] = useState<number | null>(null);
   const { refreshing, onRefresh } = useRefresh(['lessons', 'week-view']);
 
   const balanceById = useMemo(() => {
@@ -74,6 +75,11 @@ export default function InstructorPlanning() {
     // pause déjeuner uniquement si pas déjà occupée
     if (!map[PAUSE_HOUR]) {
       map[PAUSE_HOUR] = { kind: 'unavail', reason: 'Pause déjeuner' };
+    }
+    // heures libres (hors pause) → case "Ajouter" cliquable
+    for (const h of PLANNING_HOURS) {
+      if (h === PAUSE_HOUR) continue;
+      if (!map[h]) map[h] = { kind: 'add' };
     }
     return map;
   }, [lessons, balanceById]);
@@ -189,6 +195,16 @@ export default function InstructorPlanning() {
                 );
                 if (l) setActionLesson(l);
               }}
+              onPressFree={(hour) => {
+                const l = (lessons as Lesson[]).find(
+                  (x) => new Date(x.scheduled_at).getHours() === hour
+                );
+                if (l) setActionLesson(l);
+              }}
+              onPressAdd={(hour) => {
+                setCreateHour(hour);
+                setCreateOpen(true);
+              }}
             />
           </>
         ) : null}
@@ -198,7 +214,10 @@ export default function InstructorPlanning() {
             <Button
               label="+ Ajouter un créneau"
               variant="instructor"
-              onPress={() => setCreateOpen(true)}
+              onPress={() => {
+                setCreateHour(null);
+                setCreateOpen(true);
+              }}
             />
           </View>
         ) : null}
@@ -210,9 +229,13 @@ export default function InstructorPlanning() {
       />
       <CreateSlotSheet
         visible={createOpen}
-        onClose={() => setCreateOpen(false)}
+        onClose={() => {
+          setCreateOpen(false);
+          setCreateHour(null);
+        }}
         date={selected}
         takenHours={takenHours}
+        initialHour={createHour}
       />
     </SafeAreaView>
   );

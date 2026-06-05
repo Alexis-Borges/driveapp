@@ -15,7 +15,7 @@ export default function StudentMessages() {
   const { data: pkg } = useStudentPackage();
   const instructorId = pkg?.instructor_id ?? null;
   const { data: messages = [] } = useConversation(instructorId);
-  const send = useSendMessage();
+  const send = useSendMessage(instructorId);
   const markRead = useMarkRead(instructorId);
   const scrollRef = useRef<ScrollView>(null);
 

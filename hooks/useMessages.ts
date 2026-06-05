@@ -35,8 +35,9 @@ export function useConversation(otherId: string | null) {
 
   useEffect(() => {
     if (!profile || !otherId) return;
+    // channel name unique par montage : évite les collisions de souscription
     const channel = supabase
-      .channel(`messages:${profile.id}:${otherId}`)
+      .channel(`messages:${profile.id}:${otherId}:${Date.now()}`)
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'messages' },
@@ -45,9 +46,24 @@ export function useConversation(otherId: string | null) {
           const involves =
             (m.sender_id === profile.id && m.recipient_id === otherId) ||
             (m.sender_id === otherId && m.recipient_id === profile.id);
-          if (involves) {
-            qc.setQueryData<Message[]>(queryKey, (old) => [...(old ?? []), m]);
-          }
+          if (!involves) return;
+          qc.setQueryData<Message[]>(queryKey, (old) => {
+            const list = old ?? [];
+            // dé-dup : ignore si l'id existe déjà, et remplace un éventuel
+            // message optimiste (id temp- + même contenu/expéditeur).
+            if (list.some((x) => x.id === m.id)) return list;
+            const withoutOptimistic = list.filter(
+              (x) =>
+                !(
+                  x.id.startsWith('temp-') &&
+                  x.sender_id === m.sender_id &&
+                  x.content === m.content
+                )
+            );
+            return [...withoutOptimistic, m];
+          });
+          // rafraîchit la liste des threads (dernier message / non lus)
+          qc.invalidateQueries({ queryKey: ['threads'] });
         }
       )
       .subscribe();
@@ -59,8 +75,9 @@ export function useConversation(otherId: string | null) {
   return query;
 }
 
-export function useSendMessage() {
+export function useSendMessage(otherId?: string | null) {
   const profile = useAuthStore((s) => s.profile);
+  const qc = useQueryClient();
   return useMutation({
     mutationFn: async (params: { to: string; content: string }) => {
       if (!profile) throw new Error('Not authenticated');
@@ -70,6 +87,26 @@ export function useSendMessage() {
         content: params.content,
       } as never);
       if (error) throw error;
+    },
+    // Optimistic update : le message apparaît instantanément côté expéditeur.
+    onMutate: async (params) => {
+      if (!profile) return;
+      const key = ['messages', profile.id, otherId ?? params.to];
+      await qc.cancelQueries({ queryKey: key });
+      const previous = qc.getQueryData<Message[]>(key);
+      const optimistic: Message = {
+        id: `temp-${Date.now()}`,
+        sender_id: profile.id,
+        recipient_id: params.to,
+        content: params.content,
+        read_at: null,
+        created_at: new Date().toISOString(),
+      };
+      qc.setQueryData<Message[]>(key, (old) => [...(old ?? []), optimistic]);
+      return { key, previous };
+    },
+    onError: (_e, _params, ctx) => {
+      if (ctx?.key && ctx.previous) qc.setQueryData(ctx.key, ctx.previous);
     },
   });
 }

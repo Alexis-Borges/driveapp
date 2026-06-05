@@ -39,9 +39,9 @@ export function useLinkInstructorByCode() {
 
   return useMutation({
     mutationFn: async (instructorEmail: string) => {
-      const { data, error } = await supabase.rpc('link_to_instructor', {
+      const { data, error } = await supabase.rpc('link_to_instructor' as never, {
         p_instructor_email: instructorEmail,
-      });
+      } as never);
       if (error) throw new Error(error.message);
       return data as { instructor_id: string };
     },

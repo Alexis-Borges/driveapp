@@ -36,9 +36,9 @@ export function useInviteStudentByEmail() {
       if (!profile) throw new Error('Not authenticated');
       const email = studentEmail.toLowerCase().trim();
 
-      const { data, error } = await supabase.rpc('link_student_by_email', {
+      const { data, error } = await supabase.rpc('link_student_by_email' as never, {
         p_student_email: email,
-      });
+      } as never);
       if (error) throw new Error(error.message);
 
       const res = data as { found: boolean; student_id?: string };
