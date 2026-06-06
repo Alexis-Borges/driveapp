@@ -39,7 +39,7 @@ export function typeLabel(type: LessonType | string): string {
     case 'highway':
       return 'Autoroute';
     case 'parking':
-      return 'Parking';
+      return 'Manœuvres';
     case 'evaluation':
       return 'Évaluation';
     case 'mock_exam':

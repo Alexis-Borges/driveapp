@@ -27,7 +27,13 @@ export const resetSchema = z.object({
 export type LoginInput = z.infer<typeof loginSchema>;
 export type SignupInput = z.infer<typeof signupSchema>;
 
-export function firstError<T>(result: z.SafeParseReturnType<T, T>): string | null {
+// Type local indépendant de la version de zod (SafeParseReturnType a été
+// retiré en zod v4). On ne dépend que des champs qu'on lit réellement.
+type SafeParseLike =
+  | { success: true }
+  | { success: false; error: { issues: { message: string }[] } };
+
+export function firstError(result: SafeParseLike): string | null {
   if (result.success) return null;
   const first = result.error.issues[0];
   return first?.message ?? 'Champs invalides';

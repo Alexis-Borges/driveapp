@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { RefreshControl, Text, View } from 'react-native';
+import { Pressable, RefreshControl, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '../../../stores/authStore';
@@ -12,6 +12,7 @@ import { NextLessonCard } from '../../../components/student/NextLessonCard';
 import { FeedbackCard } from '../../../components/student/FeedbackCard';
 import { LockedRow } from '../../../components/student/LockedRow';
 import { LinkInstructorSheet } from '../../../components/student/LinkInstructorSheet';
+import { LessonDetailSheet } from '../../../components/student/LessonDetailSheet';
 import { EmptyState } from '../../../components/shared/EmptyState';
 import { Checklist } from '../../../components/shared/Checklist';
 import { Icon } from '../../../components/ui/Icon';
@@ -49,6 +50,7 @@ export default function StudentHome() {
   const hourlyRate = instructorInfo?.hourly_rate ?? 30;
   const instructorName = instructorInfo?.full_name ?? 'Moniteur';
   const [linkOpen, setLinkOpen] = useState(false);
+  const [detailLesson, setDetailLesson] = useState<unknown | null>(null);
   const { refreshing, onRefresh } = useRefresh([
     'student-balance',
     'student-package',
@@ -169,15 +171,17 @@ export default function StudentHome() {
           {nextLoading ? (
             <SkeletonCard height={64} />
           ) : nextLesson ? (
-            <NextLessonCard
-              number={1}
-              type={typeLabel((nextLesson as { type: string }).type)}
-              time={formatLessonTime((nextLesson as { scheduled_at: string }).scheduled_at)}
-              instructor={instructorName}
-              status={
-                (nextLesson as { status: string }).status === 'confirmed' ? 'confirmed' : 'pending'
-              }
-            />
+            <Pressable onPress={() => setDetailLesson(nextLesson as never)}>
+              <NextLessonCard
+                number={1}
+                type={typeLabel((nextLesson as { type: string }).type)}
+                time={formatLessonTime((nextLesson as { scheduled_at: string }).scheduled_at)}
+                instructor={instructorName}
+                status={
+                  (nextLesson as { status: string }).status === 'confirmed' ? 'confirmed' : 'pending'
+                }
+              />
+            </Pressable>
           ) : (
             <EmptyState
               icon="calendar"
@@ -215,6 +219,12 @@ export default function StudentHome() {
       </KeyboardAwareScroll>
 
       <LinkInstructorSheet visible={linkOpen} onClose={() => setLinkOpen(false)} />
+      <LessonDetailSheet
+        visible={!!detailLesson}
+        onClose={() => setDetailLesson(null)}
+        lesson={detailLesson as never}
+        instructorName={instructorName}
+      />
     </SafeAreaView>
   );
 }

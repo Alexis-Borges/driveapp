@@ -230,7 +230,9 @@ export function useUpcomingLessonForStudent() {
       const nowIso = new Date().toISOString();
       const { data, error } = await supabase
         .from('lessons')
-        .select('id, scheduled_at, type, status, instructor_id')
+        .select(
+          'id, instructor_id, student_id, scheduled_at, duration_minutes, type, status, feedback, rating, student_comment, cancelled_reason, pickup_address'
+        )
         .eq('student_id', profile!.id)
         .in('status', ['pending', 'confirmed'])
         .gte('scheduled_at', nowIso)

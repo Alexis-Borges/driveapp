@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react';
-import { Alert, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AlertCard } from '../../../components/instructor/AlertCard';
 import { DaySelector } from '../../../components/shared/DaySelector';
 import { PlanningGrid, type SlotState } from '../../../components/shared/PlanningGrid';
-import { useStudentLessonsForDay, useStudentCancelLesson, type Lesson } from '../../../hooks/useLessons';
+import { useStudentLessonsForDay, type Lesson } from '../../../hooks/useLessons';
 import { useStudentBalance, useStudentPackage } from '../../../hooks/useBalance';
 import { useAuthStore } from '../../../stores/authStore';
 import { useRefresh } from '../../../hooks/useRefresh';
@@ -12,6 +12,7 @@ import { useRealtimeLessons, useRealtimeInstructorSlots } from '../../../hooks/u
 import { PAUSE_HOUR } from '../../../lib/planning';
 import { isActiveLesson, typeLabel } from '../../../lib/lessons';
 import { BookSlotSheet } from '../../../components/student/BookSlotSheet';
+import { LessonDetailSheet } from '../../../components/student/LessonDetailSheet';
 
 export default function StudentPlanning() {
   const profile = useAuthStore((s) => s.profile);
@@ -25,8 +26,8 @@ export default function StudentPlanning() {
     return d;
   });
   const { data: lessons = [] } = useStudentLessonsForDay(selected, pkg?.instructor_id ?? null);
-  const cancel = useStudentCancelLesson();
   const [bookingSlot, setBookingSlot] = useState<Lesson | null>(null);
+  const [detailLesson, setDetailLesson] = useState<Lesson | null>(null);
   const { refreshing, onRefresh } = useRefresh(['lessons', 'student-balance', 'student-package']);
 
   const slots = useMemo(() => {
@@ -68,31 +69,12 @@ export default function StudentPlanning() {
     setBookingSlot(target);
   }
 
-  async function cancelMine(hour: number) {
+  function openMine(hour: number) {
     const mine = (lessons as Lesson[]).find((l) => {
       const h = new Date(l.scheduled_at).getHours();
       return h === hour && l.student_id === profile?.id;
     });
-    if (!mine) return;
-    Alert.alert(
-      'Annuler cette séance ?',
-      'Tu peux annuler jusqu\'à 48h avant la séance.',
-      [
-        { text: 'Conserver', style: 'cancel' },
-        {
-          text: 'Annuler',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await cancel.mutateAsync({ id: mine.id, scheduled_at: mine.scheduled_at });
-              Alert.alert('Séance annulée');
-            } catch (e: unknown) {
-              Alert.alert('Impossible', e instanceof Error ? e.message : 'Erreur');
-            }
-          },
-        },
-      ]
-    );
+    if (mine) setDetailLesson(mine);
   }
 
   if (!pkg?.instructor_id) {
@@ -168,7 +150,7 @@ export default function StudentPlanning() {
           slots={slots}
           variant="student"
           onPressFree={reserveAt}
-          onPressBooked={cancelMine}
+          onPressBooked={openMine}
         />
       </ScrollView>
 
@@ -177,6 +159,11 @@ export default function StudentPlanning() {
         onClose={() => setBookingSlot(null)}
         slot={bookingSlot}
         balanceHours={balance?.balance_hours ?? 0}
+      />
+      <LessonDetailSheet
+        visible={!!detailLesson}
+        onClose={() => setDetailLesson(null)}
+        lesson={detailLesson}
       />
     </SafeAreaView>
   );

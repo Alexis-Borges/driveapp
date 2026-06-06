@@ -22,13 +22,28 @@ import { ErrorBoundary } from '../components/shared/ErrorBoundary';
 
 initObservability();
 
-const queryClient = new QueryClient();
+// Defaults pensés mobile : on évite les refetch redondants (chaque écran
+// remonté re-déclenchait un fetch réseau). Les mutations + Realtime + le
+// pull-to-refresh invalident explicitement quand c'est nécessaire.
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30_000, // 30 s : les données restent "fraîches", pas de refetch au montage
+      gcTime: 5 * 60_000, // 5 min en cache avant garbage collection
+      retry: 1, // une seule nouvelle tentative en cas d'échec réseau
+      refetchOnWindowFocus: false,
+    },
+    mutations: {
+      retry: 0,
+    },
+  },
+});
 
 function RootNav() {
   useAuthBootstrap();
   usePushRegistration();
   const { session, profile, loading } = useAuthStore();
-  const segments = useSegments();
+  const segments = useSegments() as string[];
   const router = useRouter();
 
   useEffect(() => {

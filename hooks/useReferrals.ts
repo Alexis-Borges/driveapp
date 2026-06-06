@@ -13,7 +13,7 @@ export function useReferralStats() {
         .select('id, reward_type, reward_claimed')
         .eq('referrer_id', profile!.id);
       if (error) throw error;
-      const rows = data ?? [];
+      const rows = (data ?? []) as { id: string; reward_type: string | null; reward_claimed: boolean }[];
       const free = rows.filter((r) => r.reward_type === 'free_lesson').length;
       const discount = rows.filter((r) => r.reward_type === 'discount_50').length;
       return {
