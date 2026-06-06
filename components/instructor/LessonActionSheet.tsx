@@ -2,10 +2,20 @@ import { useEffect, useState } from 'react';
 import { Alert, Pressable, Text, TextInput, View } from 'react-native';
 import { BottomSheet } from '../shared/BottomSheet';
 import { Button } from '../ui/Button';
-import { Icon } from '../ui/Icon';
+import { Icon, type IconName } from '../ui/Icon';
+import { Badge } from '../ui/Badge';
 import { useUpdateLessonStatus, type Lesson } from '../../hooks/useLessons';
+import { statusLabel, typeLabel } from '../../lib/lessons';
 import { supabase } from '../../lib/supabase';
 import { useQueryClient } from '@tanstack/react-query';
+
+const STATUS_TONE: Record<string, 'student' | 'warning' | 'danger' | 'neutral'> = {
+  confirmed: 'student',
+  completed: 'student',
+  pending: 'warning',
+  cancelled: 'danger',
+  auto_cancelled: 'danger',
+};
 
 type Props = {
   visible: boolean;
@@ -86,22 +96,39 @@ export function LessonActionSheet({ visible, onClose, lesson }: Props) {
     onClose();
   }
 
-  const time = new Date(lesson.scheduled_at).toLocaleString('fr-FR', {
-    weekday: 'short',
+  const date = new Date(lesson.scheduled_at);
+  const dateLabel = date.toLocaleDateString('fr-FR', {
+    weekday: 'long',
     day: 'numeric',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
+    month: 'long',
   });
+  const hourLabel = `${String(date.getHours()).padStart(2, '0')}h00`;
+  const studentProfile = (lesson as unknown as {
+    students?: { profiles?: { first_name: string; last_name: string } | null } | null;
+  }).students?.profiles;
+  const studentName = studentProfile
+    ? `${studentProfile.first_name} ${studentProfile.last_name[0] ?? ''}.`
+    : null;
 
   return (
     <BottomSheet visible={visible} onClose={onClose}>
-      <Text className="text-text text-base font-bold mb-1">Séance · {time}</Text>
-      <Text className="text-muted text-xs mb-4">Statut actuel : {lesson.status}</Text>
+      <View className="flex-row items-center justify-between mb-3">
+        <Text className="text-text text-lg font-bold">
+          {lesson.student_id == null ? 'Créneau libre' : 'Séance'}
+        </Text>
+        <Badge label={statusLabel(lesson.status)} tone={STATUS_TONE[lesson.status] ?? 'neutral'} />
+      </View>
 
-      {lesson.student_id == null ? (
-        <Text className="text-muted2 text-xs mb-4">Créneau libre.</Text>
-      ) : null}
+      {/* détail harmonisé avec le sheet élève */}
+      <View className="bg-card2 rounded-2xl px-4 py-3 mb-3 gap-2.5">
+        <DetailRow icon="calendar" label="Quand" value={`${dateLabel} · ${hourLabel}`} />
+        <DetailRow icon="car" label="Type" value={typeLabel(lesson.type)} />
+        <DetailRow icon="clock" label="Durée" value={`${lesson.duration_minutes ?? 60} min`} />
+        {studentName ? <DetailRow icon="user" label="Élève" value={studentName} /> : null}
+        {lesson.pickup_address ? (
+          <DetailRow icon="pin" label="Lieu de RDV" value={lesson.pickup_address} />
+        ) : null}
+      </View>
 
       {cancelMode ? (
         <View className="gap-2 mb-2">
@@ -197,5 +224,15 @@ export function LessonActionSheet({ visible, onClose, lesson }: Props) {
         </View>
       )}
     </BottomSheet>
+  );
+}
+
+function DetailRow({ icon, label, value }: { icon: IconName; label: string; value: string }) {
+  return (
+    <View className="flex-row items-center gap-2.5">
+      <Icon name={icon} size={15} color="#878D9A" />
+      <Text className="text-muted2 text-[10px] uppercase tracking-wider w-20">{label}</Text>
+      <Text className="text-text text-[13px] font-medium flex-1 text-right">{value}</Text>
+    </View>
   );
 }

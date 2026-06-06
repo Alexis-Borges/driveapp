@@ -14,6 +14,7 @@ import { InviteStudentSheet } from '../../../components/instructor/InviteStudent
 import { EmptyState } from '../../../components/shared/EmptyState';
 import { Checklist, type ChecklistItem } from '../../../components/shared/Checklist';
 import { ProfileCompletenessBanner } from '../../../components/shared/ProfileCompletenessBanner';
+import { FadeInItem } from '../../../components/shared/Animated';
 import { useInstructorStripeStatus, useStripeConnectOnboarding } from '../../../hooks/useStripeConnect';
 import { useInstructorStudents } from '../../../hooks/useStudents';
 import { SkeletonCard } from '../../../components/shared/Skeleton';
@@ -227,7 +228,7 @@ export default function InstructorHome() {
               Aucune séance aujourd'hui — passe au planning pour ouvrir des créneaux.
             </Text>
           ) : (
-            today.map((l: Lesson) => {
+            today.map((l: Lesson, i: number) => {
               const studentName = (l as unknown as {
                 students?: { profiles?: { first_name: string; last_name: string } | null } | null;
               }).students?.profiles;
@@ -250,21 +251,22 @@ export default function InstructorHome() {
                       ? 'pending'
                       : 'critical';
               return (
-                <TodayLessonItem
-                  key={l.id}
-                  time={formatTime(l.scheduled_at)}
-                  name={
-                    studentName
-                      ? `${studentName.first_name} ${studentName.last_name[0]}.`
-                      : 'Créneau libre'
-                  }
-                  subtitle={
-                    isCritical
-                      ? `${typeLabel(l.type)} · Annulation auto si impayé`
-                      : typeLabel(l.type)
-                  }
-                  status={status}
-                />
+                <FadeInItem key={l.id} index={i}>
+                  <TodayLessonItem
+                    time={formatTime(l.scheduled_at)}
+                    name={
+                      studentName
+                        ? `${studentName.first_name} ${studentName.last_name[0]}.`
+                        : 'Créneau libre'
+                    }
+                    subtitle={
+                      isCritical
+                        ? `${typeLabel(l.type)} · Annulation auto si impayé`
+                        : typeLabel(l.type)
+                    }
+                    status={status}
+                  />
+                </FadeInItem>
               );
             })
           )}
@@ -298,7 +300,7 @@ export default function InstructorHome() {
               variant="instructor"
             />
           ) : (
-            students.map((s) => {
+            students.map((s, i) => {
               const tone: 'danger' | 'success' | 'neutral' =
                 s.balance_hours < 0 ? 'danger' : s.balance_hours > 0 ? 'success' : 'neutral';
               const balanceLabel =
@@ -308,15 +310,17 @@ export default function InstructorHome() {
                     ? `+${s.balance_hours}h`
                     : `${s.balance_hours}h`;
               return (
-                <Pressable key={s.id} onPress={() => router.push(`/(instructor)/student/${s.id}`)}>
-                  <StudentRow
-                    initials={`${s.first_name[0] ?? ''}${s.last_name[0] ?? ''}`}
-                    name={`${s.first_name} ${s.last_name}`}
-                    subtitle={`Forfait ${s.package_total_hours}h · ${s.hours_booked}h planifiées · ${s.hours_paid}h payées`}
-                    balance={balanceLabel}
-                    balanceTone={tone}
-                  />
-                </Pressable>
+                <FadeInItem key={s.id} index={i}>
+                  <Pressable onPress={() => router.push(`/(instructor)/student/${s.id}`)}>
+                    <StudentRow
+                      initials={`${s.first_name[0] ?? ''}${s.last_name[0] ?? ''}`}
+                      name={`${s.first_name} ${s.last_name}`}
+                      subtitle={`Forfait ${s.package_total_hours}h · ${s.hours_booked}h planifiées · ${s.hours_paid}h payées`}
+                      balance={balanceLabel}
+                      balanceTone={tone}
+                    />
+                  </Pressable>
+                </FadeInItem>
               );
             })
           )}

@@ -3,6 +3,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScreenHeader } from '../../components/shared/ScreenHeader';
 import { SectionLabel } from '../../components/shared/SectionLabel';
 import { Badge } from '../../components/ui/Badge';
+import { SkeletonList } from '../../components/shared/Skeleton';
+import { FadeInItem } from '../../components/shared/Animated';
 import { useInstructorRevenue } from '../../hooks/useInstructorRevenue';
 
 function euros(cents: number) {
@@ -23,7 +25,7 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 export default function Revenue() {
-  const { data } = useInstructorRevenue();
+  const { data, isLoading } = useInstructorRevenue();
   const payments = data?.payments ?? [];
 
   return (
@@ -50,14 +52,17 @@ export default function Revenue() {
         </View>
 
         <SectionLabel>Historique des paiements</SectionLabel>
-        {payments.length === 0 ? (
+        {isLoading ? (
+          <SkeletonList count={5} />
+        ) : payments.length === 0 ? (
           <Text className="text-muted2 text-xs px-5">
             Aucun paiement pour le moment. Les achats de tes élèves apparaîtront ici.
           </Text>
         ) : (
-          payments.map((p) => (
-            <View
+          payments.map((p, i) => (
+            <FadeInItem
               key={p.id}
+              index={i}
               className="mx-5 mb-1.5 bg-card border border-border rounded-2xl px-3 py-2.5 flex-row items-center justify-between"
             >
               <View className="flex-1">
@@ -77,7 +82,7 @@ export default function Revenue() {
                 <Text className="text-text text-sm font-bold">{euros(p.amount_cents)} €</Text>
                 <Badge label={STATUS_LABEL[p.status] ?? p.status} tone={STATUS_TONE[p.status] ?? 'neutral'} />
               </View>
-            </View>
+            </FadeInItem>
           ))
         )}
       </ScrollView>

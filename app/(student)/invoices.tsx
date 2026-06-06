@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Alert, Linking, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScreenHeader } from '../../components/shared/ScreenHeader';
+import { SkeletonList } from '../../components/shared/Skeleton';
+import { FadeInItem } from '../../components/shared/Animated';
 import { useStudentInvoices } from '../../hooks/useInvoices';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabase';
@@ -27,7 +29,7 @@ export default function StudentInvoices() {
   const { data: invoices = [] } = useStudentInvoices();
   const [generating, setGenerating] = useState<string | null>(null);
 
-  const { data: payments = [] } = useQuery({
+  const { data: payments = [], isLoading } = useQuery({
     queryKey: ['my-payments', profile?.id],
     enabled: !!profile,
     queryFn: async () => {
@@ -77,14 +79,17 @@ export default function StudentInvoices() {
       <ScreenHeader title="Mes factures" />
 
       <ScrollView contentContainerStyle={{ paddingTop: 12, paddingBottom: 32 }}>
-        {payments.length === 0 ? (
+        {isLoading ? (
+          <SkeletonList count={4} />
+        ) : payments.length === 0 ? (
           <Text className="text-muted2 text-xs px-5 mt-3">Aucun paiement.</Text>
         ) : (
-          payments.map((p) => {
+          payments.map((p, idx) => {
             const inv = invoices.find((i) => i.payment_id === p.id);
             return (
-              <View
+              <FadeInItem
                 key={p.id}
+                index={idx}
                 className="mx-5 mb-2 bg-card border border-border rounded-2xl px-3 py-3"
               >
                 <View className="flex-row justify-between items-center">
@@ -107,7 +112,7 @@ export default function StudentInvoices() {
                     </Text>
                   </Pressable>
                 </View>
-              </View>
+              </FadeInItem>
             );
           })
         )}
