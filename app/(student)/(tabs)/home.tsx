@@ -28,8 +28,11 @@ import {
   useUpcomingLessonForStudent,
   useUpcomingEvaluation,
   useLastFeedbackForStudent,
+  useNextFreeSlotForStudent,
+  type Lesson,
 } from '../../../hooks/useLessons';
 import { typeLabel } from '../../../lib/lessons';
+import { BookSlotSheet } from '../../../components/student/BookSlotSheet';
 
 function formatLessonTime(iso: string) {
   const d = new Date(iso);
@@ -43,6 +46,8 @@ export default function StudentHome() {
   const { data: balance } = useStudentBalance();
   const { data: pkg } = useStudentPackage();
   const { data: nextLesson, isLoading: nextLoading } = useUpcomingLessonForStudent();
+  const { data: nextFreeSlot } = useNextFreeSlotForStudent(pkg?.instructor_id ?? null);
+  const [bookingSlot, setBookingSlot] = useState<Lesson | null>(null);
   const { data: evaluation } = useUpcomingEvaluation();
   const { data: lastFeedback, isLoading: feedbackLoading } = useLastFeedbackForStudent();
   const { data: instructorInfo } = useLinkedInstructorInfo(pkg?.instructor_id ?? null);
@@ -182,11 +187,31 @@ export default function StudentHome() {
                 }
               />
             </Pressable>
+          ) : nextFreeSlot ? (
+            // pas de séance réservée mais le moniteur a ouvert un créneau →
+            // raccourci pour réserver directement depuis l'accueil.
+            <Pressable
+              onPress={() => setBookingSlot(nextFreeSlot)}
+              className="bg-student/10 border border-student/30 rounded-2xl px-3 py-3 flex-row items-center gap-3"
+            >
+              <View className="w-10 h-10 rounded-xl bg-student/20 items-center justify-center">
+                <Icon name="calendar" size={18} color="#00C896" />
+              </View>
+              <View className="flex-1">
+                <Text className="text-text text-sm font-bold">
+                  Prochain créneau libre
+                </Text>
+                <Text className="text-muted text-[11px] mt-0.5">
+                  {formatLessonTime(nextFreeSlot.scheduled_at)} · {typeLabel(nextFreeSlot.type)}
+                </Text>
+              </View>
+              <Text className="text-student text-[11px] font-bold">Réserver</Text>
+            </Pressable>
           ) : (
             <EmptyState
               icon="calendar"
-              title="Aucune séance à venir"
-              body="Réserve un créneau auprès de ton moniteur depuis le planning."
+              title="Aucun créneau disponible"
+              body="Ton moniteur n'a pas encore ouvert de créneau libre. Tu seras notifié dès qu'il y en aura un."
               variant="student"
             />
           )}
@@ -224,6 +249,12 @@ export default function StudentHome() {
         onClose={() => setDetailLesson(null)}
         lesson={detailLesson as never}
         instructorName={instructorName}
+      />
+      <BookSlotSheet
+        visible={!!bookingSlot}
+        onClose={() => setBookingSlot(null)}
+        slot={bookingSlot}
+        balanceHours={balance?.balance_hours ?? 0}
       />
     </SafeAreaView>
   );

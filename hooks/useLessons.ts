@@ -100,6 +100,49 @@ export function useCreateSlot() {
   });
 }
 
+// Création multi-créneaux : insère en une seule requête N créneaux libres,
+// tous au même type / lieu / durée. Évite le "1 sheet par heure" qui demandait
+// 5 ouvertures de modale pour ouvrir une matinée. Si l'un des créneaux est
+// déjà pris (23505), on remonte la liste des heures rejetées sans rien
+// insérer (Postgres rollback la requête entière sur conflit).
+export function useCreateSlotsBatch() {
+  const profile = useAuthStore((s) => s.profile);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: {
+      hours: number[];
+      date: Date;
+      type: LessonType;
+      pickup_address?: string;
+    }) => {
+      if (!profile) throw new Error('Not authenticated');
+      if (params.hours.length === 0) throw new Error('Aucune heure sélectionnée');
+      const rows = params.hours.map((h) => {
+        const d = new Date(params.date);
+        d.setHours(h, 0, 0, 0);
+        return {
+          instructor_id: profile.id,
+          student_id: null,
+          scheduled_at: d.toISOString(),
+          duration_minutes: 60,
+          type: params.type,
+          status: 'pending' as const,
+          pickup_address: params.pickup_address ?? null,
+        };
+      });
+      const { error } = await supabase.from('lessons').insert(rows as never);
+      if (error) {
+        if (error.code === '23505') {
+          throw new Error('Au moins un de ces créneaux existe déjà.');
+        }
+        throw error;
+      }
+      return params.hours.length;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['lessons'] }),
+  });
+}
+
 export function useBookSlot() {
   const profile = useAuthStore((s) => s.profile);
   const qc = useQueryClient();
@@ -218,6 +261,32 @@ export function useStudentCancelLesson() {
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['lessons'] }),
+  });
+}
+
+// Prochain créneau libre du moniteur lié, dans le futur, jamais dans une
+// fenêtre <2h (laisse au moniteur le temps de réagir si l'élève réserve juste
+// avant). Sert au "réserver maintenant" depuis l'accueil élève.
+export function useNextFreeSlotForStudent(instructorId: string | null) {
+  const profile = useAuthStore((s) => s.profile);
+  return useQuery({
+    queryKey: ['next-free-slot', profile?.id, instructorId],
+    enabled: !!profile && profile.role === 'student' && !!instructorId,
+    queryFn: async () => {
+      const cutoff = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString();
+      const { data, error } = await supabase
+        .from('lessons')
+        .select('id, instructor_id, student_id, scheduled_at, type, status, duration_minutes, feedback, rating, student_comment, cancelled_reason, pickup_address')
+        .eq('instructor_id', instructorId!)
+        .is('student_id', null)
+        .in('status', ['pending', 'confirmed'])
+        .gte('scheduled_at', cutoff)
+        .order('scheduled_at')
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return data as Lesson | null;
+    },
   });
 }
 
