@@ -30,10 +30,12 @@ export function useRealtimeLessons() {
       () => {
         qc.invalidateQueries({ queryKey: ['lessons'] });
         qc.invalidateQueries({ queryKey: ['next-lesson'] });
+        qc.invalidateQueries({ queryKey: ['next-free-slot'] });
         qc.invalidateQueries({ queryKey: ['eval'] });
         qc.invalidateQueries({ queryKey: ['last-feedback'] });
         qc.invalidateQueries({ queryKey: ['student-balance'] });
         qc.invalidateQueries({ queryKey: ['instructor-week-stats'] });
+        qc.invalidateQueries({ queryKey: ['week-view'] });
       }
     );
     channel.subscribe();
@@ -63,7 +65,10 @@ export function useRealtimeInstructorSlots(instructorId: string | null) {
         table: 'lessons',
         filter: `instructor_id=eq.${instructorId}`,
       },
-      () => qc.invalidateQueries({ queryKey: ['lessons'] })
+      () => {
+        qc.invalidateQueries({ queryKey: ['lessons'] });
+        qc.invalidateQueries({ queryKey: ['next-free-slot'] });
+      }
     );
     channel.subscribe();
     return () => {

@@ -139,7 +139,11 @@ export function useCreateSlotsBatch() {
       }
       return params.hours.length;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['lessons'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['lessons'] });
+      qc.invalidateQueries({ queryKey: ['next-free-slot'] });
+      qc.invalidateQueries({ queryKey: ['week-view'] });
+    },
   });
 }
 
@@ -149,12 +153,21 @@ export function useBookSlot() {
   return useMutation({
     mutationFn: async (lessonId: string) => {
       if (!profile) throw new Error('Not authenticated');
-      const { error } = await supabase
+      // .select().maybeSingle() pour récupérer la ligne réellement modifiée :
+      // si un autre élève vient de la réserver, la clause `is('student_id', null)`
+      // ne matche plus → 0 ligne renvoyée → on remonte une erreur claire au
+      // lieu d'un faux succès qui laissait l'UI optimiste désynchronisée.
+      const { data, error } = await supabase
         .from('lessons')
         .update({ student_id: profile.id, status: 'pending' } as never)
         .eq('id', lessonId)
-        .is('student_id', null);
+        .is('student_id', null)
+        .select('id')
+        .maybeSingle();
       if (error) throw error;
+      if (!data) {
+        throw new Error('Ce créneau vient d\'être pris par un autre élève.');
+      }
     },
     // Optimistic : on patch immédiatement le créneau dans le cache pour que
     // l'UI bouge sans attendre Supabase. Rollback automatique en onError.
@@ -170,7 +183,8 @@ export function useBookSlot() {
             : l
         );
       });
-      haptics.success();
+      // haptic déplacé en onSuccess : sinon en cas de race condition on sent
+      // un faux "succès" suivi d'une "erreur" — confus.
       return { previous };
     },
     onError: (_err, _vars, ctx) => {
@@ -180,10 +194,14 @@ export function useBookSlot() {
       }
     },
     onSuccess: () => {
+      haptics.success();
       track('lesson_booked');
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: ['lessons'] });
+      qc.invalidateQueries({ queryKey: ['next-free-slot'] });
+      qc.invalidateQueries({ queryKey: ['next-lesson'] });
+      qc.invalidateQueries({ queryKey: ['student-balance'] });
     },
   });
 }
@@ -220,9 +238,8 @@ export function useUpdateLessonStatus() {
               : l
         );
       });
-      // confirmation = succès, annulation = warning
-      if (params.status === 'confirmed' || params.status === 'completed') haptics.success();
-      else if (params.status === 'cancelled' || params.status === 'auto_cancelled') haptics.warning();
+      // haptic déplacé en onSuccess pour éviter le faux succès si le serveur
+      // refuse la mutation après l'optimistic.
       return { previous };
     },
     onError: (_err, _vars, ctx) => {
@@ -232,10 +249,13 @@ export function useUpdateLessonStatus() {
       }
     },
     onSuccess: (_data, params) => {
+      if (params.status === 'confirmed' || params.status === 'completed') haptics.success();
+      else if (params.status === 'cancelled' || params.status === 'auto_cancelled') haptics.warning();
       track('lesson_status_changed', { status: params.status });
     },
     onSettled: () => {
       qc.invalidateQueries({ queryKey: ['lessons'] });
+      qc.invalidateQueries({ queryKey: ['next-free-slot'] });
     },
   });
 }
