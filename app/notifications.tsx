@@ -19,9 +19,10 @@ import { useRefresh } from '../hooks/useRefresh';
 import { useAuthStore } from '../stores/authStore';
 import { haptics } from '../lib/haptics';
 
-// Largeur du panneau de suppression révélé par le glissement. Sert aussi à
+// Largeur du panneau de suppression révélé par le glissement. Assez large pour
+// que l'icône et le libellé tiennent côte à côte sans être serrés. Sert aussi à
 // dériver le seuil d'ouverture, qui doit rester en deçà pour être atteignable.
-const ACTION_WIDTH = 84;
+const ACTION_WIDTH = 124;
 
 // « il y a 3 h » plutôt qu'une date absolue : sur un flux d'activité, la
 // fraîcheur compte plus que l'horodatage exact.
@@ -132,9 +133,9 @@ export default function Notifications() {
                       })}
                       className="justify-center pr-2"
                     >
-                      <View className="flex-1 bg-danger rounded-2xl items-center justify-center gap-1">
+                      <View className="flex-1 bg-danger rounded-2xl flex-row items-center justify-center gap-2 px-3">
                         <Icon name="trash" size={16} color="#fff" />
-                        <Text className="text-white text-[10px] font-bold">Supprimer</Text>
+                        <Text className="text-white text-xs font-bold">Supprimer</Text>
                       </View>
                     </Pressable>
                   )}
