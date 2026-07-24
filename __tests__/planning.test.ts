@@ -5,6 +5,8 @@ import {
   hoursUntil,
   isLessonCritical,
   isInAmberWindow,
+  bookableHoursFor,
+  isLunchBreak,
 } from '../lib/planning';
 
 const NOW = new Date('2026-06-01T08:00:00.000Z').getTime();
@@ -94,5 +96,32 @@ describe('isInAmberWindow (48-72h)', () => {
   test('bornes 48h et 72h incluses', () => {
     expect(isInAmberWindow(inHours(48), NOW)).toBe(true);
     expect(isInAmberWindow(inHours(72), NOW)).toBe(true);
+  });
+});
+
+describe('pause déjeuner configurable par moniteur', () => {
+  test('par défaut 13h est fermé', () => {
+    expect(bookableHoursFor(false)).not.toContain(PAUSE_HOUR);
+    expect(bookableHoursFor(false)).toEqual(BOOKABLE_HOURS);
+  });
+
+  test('moniteur qui travaille à 13h → créneau ouvert', () => {
+    expect(bookableHoursFor(true)).toContain(PAUSE_HOUR);
+    expect(bookableHoursFor(true)).toEqual(PLANNING_HOURS);
+  });
+
+  // Le réglage arrive d'une requête réseau : il est undefined au premier
+  // rendu et null si la ligne instructors manque. Les deux doivent se
+  // comporter comme "pause fermée", jamais ouvrir le créneau par accident.
+  test('valeur absente → comportement par défaut (fermé)', () => {
+    expect(bookableHoursFor(undefined)).not.toContain(PAUSE_HOUR);
+    expect(bookableHoursFor(null)).not.toContain(PAUSE_HOUR);
+  });
+
+  test('isLunchBreak ne concerne que 13h', () => {
+    expect(isLunchBreak(PAUSE_HOUR, false)).toBe(true);
+    expect(isLunchBreak(PAUSE_HOUR, true)).toBe(false);
+    expect(isLunchBreak(10, false)).toBe(false);
+    expect(isLunchBreak(10, true)).toBe(false);
   });
 });

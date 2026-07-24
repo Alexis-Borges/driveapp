@@ -3,7 +3,8 @@ import { Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-nativ
 import { BottomSheet } from '../shared/BottomSheet';
 import { Button } from '../ui/Button';
 import { useCreateSlotsBatch, type LessonType } from '../../hooks/useLessons';
-import { BOOKABLE_HOURS } from '../../lib/planning';
+import { useInstructorSelf } from '../../hooks/useInstructorSelf';
+import { bookableHoursFor } from '../../lib/planning';
 import { Icon, type IconName } from '../ui/Icon';
 
 type Props = {
@@ -32,9 +33,10 @@ export function CreateSlotSheet({ visible, onClose, date, takenHours, initialHou
   const [type, setType] = useState<LessonType>('city');
   const [pickup, setPickup] = useState('');
 
+  const { data: instr } = useInstructorSelf();
   const available = useMemo(
-    () => BOOKABLE_HOURS.filter((h) => !takenHours.has(h)),
-    [takenHours]
+    () => bookableHoursFor(instr?.works_lunch_hour).filter((h) => !takenHours.has(h)),
+    [takenHours, instr?.works_lunch_hour]
   );
 
   // Pré-sélectionne l'heure tapée dans la grille à l'ouverture.

@@ -14,7 +14,7 @@ import { AppFooter } from '../../../components/shared/AppFooter';
 import { RgpdSection } from '../../../components/shared/RgpdSection';
 import { useAuthStore } from '../../../stores/authStore';
 import { confirmSignOut } from '../../../hooks/useAuth';
-import { useInstructorSelf } from '../../../hooks/useInstructorSelf';
+import { useInstructorSelf, useUpdateInstructorSelf } from '../../../hooks/useInstructorSelf';
 
 function Field({ label, value, locked }: { label: string; value: string; locked?: boolean }) {
   return (
@@ -48,6 +48,8 @@ function NavRow({ label, icon, onPress }: { label: string; icon: IconName; onPre
 export default function InstructorProfile() {
   const profile = useAuthStore((s) => s.profile);
   const { data: instr } = useInstructorSelf();
+  const updateSelf = useUpdateInstructorSelf();
+  const worksLunchHour = !!instr?.works_lunch_hour;
   const router = useRouter();
   const [editOpen, setEditOpen] = useState(false);
 
@@ -124,6 +126,41 @@ export default function InstructorProfile() {
           label="Mes congés"
           onPress={() => router.push('/(instructor)/leaves')}
         />
+        <Pressable
+          accessibilityRole="switch"
+          accessibilityState={{ checked: worksLunchHour }}
+          accessibilityLabel="Travailler sur le créneau de 13 h"
+          onPress={() =>
+            updateSelf.mutate(
+              { works_lunch_hour: !worksLunchHour },
+              {
+                onError: (e) =>
+                  Alert.alert('Erreur', e instanceof Error ? e.message : 'Réglage non enregistré'),
+              }
+            )
+          }
+          className="mx-5 mb-1.5 bg-card border border-border rounded-2xl px-3 py-3 flex-row items-center justify-between gap-3"
+        >
+          <View className="flex-1">
+            <Text className="text-text text-sm">Travailler à 13 h</Text>
+            <Text className="text-muted2 text-[10px] mt-0.5">
+              {worksLunchHour
+                ? 'Le créneau de 13 h est ouvert à la réservation'
+                : 'Le créneau de 13 h est réservé à ta pause déjeuner'}
+            </Text>
+          </View>
+          {/* Interrupteur maison : react-native Switch ignore les couleurs de
+              piste sur iOS, il jurerait avec le reste de l'écran. */}
+          <View
+            className={`w-11 h-6 rounded-full px-0.5 justify-center ${
+              worksLunchHour ? 'bg-instructor' : 'bg-card2 border border-border'
+            }`}
+          >
+            <View
+              className={`w-5 h-5 rounded-full bg-text ${worksLunchHour ? 'self-end' : 'self-start'}`}
+            />
+          </View>
+        </Pressable>
 
         <SectionLabel>Informations</SectionLabel>
         <Pressable onPress={() => setEditOpen(true)}>

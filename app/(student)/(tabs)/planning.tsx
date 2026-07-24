@@ -9,7 +9,8 @@ import { useStudentBalance, useStudentPackage } from '../../../hooks/useBalance'
 import { useAuthStore } from '../../../stores/authStore';
 import { useRefresh } from '../../../hooks/useRefresh';
 import { useRealtimeLessons, useRealtimeInstructorSlots } from '../../../hooks/useRealtimeLessons';
-import { PAUSE_HOUR } from '../../../lib/planning';
+import { PAUSE_HOUR, isLunchBreak } from '../../../lib/planning';
+import { useLinkedInstructorInfo } from '../../../hooks/useStripeConnect';
 import { isActiveLesson, typeLabel } from '../../../lib/lessons';
 import { BookSlotSheet } from '../../../components/student/BookSlotSheet';
 import { LessonDetailSheet } from '../../../components/student/LessonDetailSheet';
@@ -26,6 +27,7 @@ export default function StudentPlanning() {
     return d;
   });
   const { data: lessons = [] } = useStudentLessonsForDay(selected, pkg?.instructor_id ?? null);
+  const { data: instrInfo } = useLinkedInstructorInfo(pkg?.instructor_id ?? null);
   const [bookingSlot, setBookingSlot] = useState<Lesson | null>(null);
   const [detailLesson, setDetailLesson] = useState<Lesson | null>(null);
   const { refreshing, onRefresh } = useRefresh(['lessons', 'student-balance', 'student-package']);
@@ -48,11 +50,12 @@ export default function StudentPlanning() {
         map[h] = { kind: 'unavail', reason: 'Créneau pris' };
       }
     }
-    if (!map[PAUSE_HOUR]) {
+    // Pause déjeuner : fermée sauf si l'enseignant·e a ouvert ce créneau.
+    if (!map[PAUSE_HOUR] && isLunchBreak(PAUSE_HOUR, instrInfo?.works_lunch_hour)) {
       map[PAUSE_HOUR] = { kind: 'unavail', reason: 'Pause déjeuner' };
     }
     return map;
-  }, [lessons, profile]);
+  }, [lessons, profile, instrInfo?.works_lunch_hour]);
 
   function shiftDay(delta: number) {
     const d = new Date(selected);

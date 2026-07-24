@@ -141,6 +141,7 @@ export type Database = {
           invite_code: string | null
           is_verified: boolean | null
           stripe_account_id: string | null
+          works_lunch_hour: boolean
           zone_geo: string | null
         }
         Insert: {
@@ -152,6 +153,7 @@ export type Database = {
           invite_code?: string | null
           is_verified?: boolean | null
           stripe_account_id?: string | null
+          works_lunch_hour?: boolean
           zone_geo?: string | null
         }
         Update: {
@@ -163,6 +165,7 @@ export type Database = {
           invite_code?: string | null
           is_verified?: boolean | null
           stripe_account_id?: string | null
+          works_lunch_hour?: boolean
           zone_geo?: string | null
         }
         Relationships: [

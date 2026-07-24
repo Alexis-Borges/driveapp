@@ -8,7 +8,8 @@ import {
   useDeleteRecurringSlot,
   useRecurringSlots,
 } from '../../hooks/useRecurringSlots';
-import { BOOKABLE_HOURS } from '../../lib/planning';
+import { useInstructorSelf } from '../../hooks/useInstructorSelf';
+import { bookableHoursFor } from '../../lib/planning';
 import type { RecurringSlotRow } from '../../types/database';
 
 // Lundi → Samedi (les auto-écoles travaillent rarement le dimanche).
@@ -27,6 +28,8 @@ function keyOf(weekday: number, hour: number) {
 
 export default function RecurringSlots() {
   const { data: rules = [] } = useRecurringSlots();
+  const { data: instr } = useInstructorSelf();
+  const bookableHours = bookableHoursFor(instr?.works_lunch_hour);
   const create = useCreateRecurringSlot();
   const del = useDeleteRecurringSlot();
 
@@ -78,7 +81,7 @@ export default function RecurringSlots() {
           </View>
 
           {/* lignes heures */}
-          {BOOKABLE_HOURS.map((h) => (
+          {bookableHours.map((h) => (
             <View key={h} className="flex-row items-center mb-1">
               <Text className="font-mono text-[10px] text-muted2 text-right" style={{ width: 30 }}>
                 {String(h).padStart(2, '0')}h

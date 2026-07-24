@@ -43,7 +43,7 @@ export function useLinkedInstructorInfo(instructorId: string | null) {
       const [instrRes, profRes] = await Promise.all([
         supabase
           .from('instructors')
-          .select('is_verified, hourly_rate')
+          .select('is_verified, hourly_rate, works_lunch_hour')
           .eq('id', instructorId!)
           .maybeSingle(),
         supabase
@@ -54,11 +54,16 @@ export function useLinkedInstructorInfo(instructorId: string | null) {
       ]);
       if (instrRes.error) throw instrRes.error;
       if (profRes.error) throw profRes.error;
-      const instr = instrRes.data as { is_verified: boolean; hourly_rate: number } | null;
+      const instr = instrRes.data as {
+        is_verified: boolean;
+        hourly_rate: number;
+        works_lunch_hour: boolean;
+      } | null;
       const prof = profRes.data as { first_name: string; last_name: string } | null;
       return {
         is_verified: !!instr?.is_verified,
         hourly_rate: instr?.hourly_rate ?? 30,
+        works_lunch_hour: !!instr?.works_lunch_hour,
         first_name: prof?.first_name ?? '',
         last_name: prof?.last_name ?? '',
         full_name: prof ? `${prof.first_name} ${prof.last_name[0] ?? ''}.` : 'Moniteur',

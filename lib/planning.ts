@@ -12,11 +12,26 @@ export const PLANNING_HOURS: number[] = Array.from(
   (_, i) => PLANNING_START_HOUR + i
 );
 
-// Heures réservables : grille moins la pause déjeuner.
+// Heures réservables par défaut : grille moins la pause déjeuner.
 // Utilisée pour la création de créneau et les règles récurrentes.
 export const BOOKABLE_HOURS: number[] = PLANNING_HOURS.filter(
   (h) => h !== PAUSE_HOUR
 );
+
+// Heures réservables d'un moniteur donné. La pause de 13 h est fermée par
+// défaut, mais chaque moniteur peut l'ouvrir (instructors.works_lunch_hour) :
+// un indépendant gère ses propres horaires.
+export function bookableHoursFor(worksLunchHour: boolean | null | undefined): number[] {
+  return worksLunchHour ? PLANNING_HOURS : BOOKABLE_HOURS;
+}
+
+// Le créneau de 13 h est-il fermé pour ce moniteur ?
+export function isLunchBreak(
+  hour: number,
+  worksLunchHour: boolean | null | undefined
+): boolean {
+  return hour === PAUSE_HOUR && !worksLunchHour;
+}
 
 // Fenêtres temporelles de la règle 48 h.
 export const CRITICAL_WINDOW_HOURS = 48; // séance impayée < 48 h = annulation auto

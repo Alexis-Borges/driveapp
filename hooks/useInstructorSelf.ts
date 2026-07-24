@@ -11,6 +11,7 @@ type InstructorSelf = {
   experience_years: number | null;
   stripe_account_id: string | null;
   is_verified: boolean;
+  works_lunch_hour: boolean;
 };
 
 export function useInstructorSelf() {
@@ -21,7 +22,7 @@ export function useInstructorSelf() {
     queryFn: async (): Promise<InstructorSelf | null> => {
       const { data, error } = await supabase
         .from('instructors')
-        .select('id, agreement_number, invite_code, hourly_rate, zone_geo, experience_years, stripe_account_id, is_verified')
+        .select('id, agreement_number, invite_code, hourly_rate, zone_geo, experience_years, stripe_account_id, is_verified, works_lunch_hour')
         .eq('id', profile!.id)
         .maybeSingle();
       if (error) throw error;
@@ -38,12 +39,14 @@ export function useUpdateInstructorSelf() {
       hourly_rate?: number;
       zone_geo?: string | null;
       experience_years?: number | null;
+      works_lunch_hour?: boolean;
     }) => {
       if (!profile) throw new Error('Non connecté');
       const update: Record<string, unknown> = {};
       if (params.hourly_rate !== undefined) update.hourly_rate = params.hourly_rate;
       if (params.zone_geo !== undefined) update.zone_geo = params.zone_geo;
       if (params.experience_years !== undefined) update.experience_years = params.experience_years;
+      if (params.works_lunch_hour !== undefined) update.works_lunch_hour = params.works_lunch_hour;
       const { error } = await supabase
         .from('instructors')
         .update(update as never)

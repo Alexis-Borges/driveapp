@@ -11,7 +11,8 @@ import { WeekView } from '../../../components/instructor/WeekView';
 import { useRefresh } from '../../../hooks/useRefresh';
 import { useRealtimeLessons } from '../../../hooks/useRealtimeLessons';
 import { useInstructorStudents } from '../../../hooks/useStudents';
-import { PAUSE_HOUR, PLANNING_HOURS, isLessonCritical } from '../../../lib/planning';
+import { useInstructorSelf } from '../../../hooks/useInstructorSelf';
+import { PAUSE_HOUR, PLANNING_HOURS, isLessonCritical, isLunchBreak } from '../../../lib/planning';
 import { isActiveLesson, typeLabel } from '../../../lib/lessons';
 
 export default function InstructorPlanning() {
@@ -24,6 +25,8 @@ export default function InstructorPlanning() {
   const [view, setView] = useState<'day' | 'week'>('day');
   const { data: lessons = [] } = useInstructorLessonsForDay(selected);
   const { data: studentsList = [] } = useInstructorStudents();
+  const { data: instr } = useInstructorSelf();
+  const worksLunchHour = !!instr?.works_lunch_hour;
   const [actionLesson, setActionLesson] = useState<Lesson | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [createHour, setCreateHour] = useState<number | null>(null);
@@ -72,23 +75,22 @@ export default function InstructorPlanning() {
         };
       }
     }
-    // pause déjeuner uniquement si pas déjà occupée
-    if (!map[PAUSE_HOUR]) {
-      map[PAUSE_HOUR] = { kind: 'unavail', reason: 'Pause déjeuner' };
-    }
-    // heures libres (hors pause) → case "Ajouter" cliquable
+    // heures restantes : pause déjeuner fermée (sauf si le moniteur l'ouvre),
+    // sinon case "Ajouter" cliquable
     for (const h of PLANNING_HOURS) {
-      if (h === PAUSE_HOUR) continue;
-      if (!map[h]) map[h] = { kind: 'add' };
+      if (map[h]) continue;
+      map[h] = isLunchBreak(h, worksLunchHour)
+        ? { kind: 'unavail', reason: 'Pause déjeuner' }
+        : { kind: 'add' };
     }
     return map;
-  }, [lessons, balanceById]);
+  }, [lessons, balanceById, worksLunchHour]);
 
   const stats = useMemo(() => {
     let booked = 0;
     let free = 0;
     for (const h of PLANNING_HOURS) {
-      if (h === PAUSE_HOUR) continue;
+      if (isLunchBreak(h, worksLunchHour)) continue;
       const s = slots[h];
       if (!s) continue;
       if (s.kind === 'free') free++;
@@ -97,7 +99,7 @@ export default function InstructorPlanning() {
     const total = booked + free;
     const pct = total === 0 ? 0 : Math.round((booked / total) * 100);
     return { free, total, pct };
-  }, [slots]);
+  }, [slots, worksLunchHour]);
 
   function shiftDay(delta: number) {
     const d = new Date(selected);
@@ -107,13 +109,13 @@ export default function InstructorPlanning() {
 
   const takenHours = useMemo(() => {
     const s = new Set<number>();
-    s.add(PAUSE_HOUR);
+    if (isLunchBreak(PAUSE_HOUR, worksLunchHour)) s.add(PAUSE_HOUR);
     for (const l of lessons as Lesson[]) {
       if (!isActiveLesson(l.status)) continue;
       s.add(new Date(l.scheduled_at).getHours());
     }
     return s;
-  }, [lessons]);
+  }, [lessons, worksLunchHour]);
 
   return (
     <SafeAreaView className="flex-1 bg-bg" edges={['top']}>
