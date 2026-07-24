@@ -139,6 +139,16 @@ export default function InstructorHome() {
 
   const now = Date.now();
 
+  // L'accueil ne montre que les séances réservées : un moniteur qui ouvre sa
+  // journée se retrouvait avec 11 « Créneau libre » noyant sa seule vraie
+  // séance. Les créneaux libres restent visibles dans le planning, et leur
+  // nombre est rappelé sous la liste.
+  const todayBooked = useMemo(
+    () => (today as Lesson[]).filter((l) => l.student_id !== null),
+    [today]
+  );
+  const todayFreeCount = today.length - todayBooked.length;
+
   // Élèves avec séance dans la fenêtre 48-72h ET solde négatif → alerte amber
   const soonDueStudents = useMemo(() => {
     return overdueStudents.filter((s) => {
@@ -230,12 +240,16 @@ export default function InstructorHome() {
               <SkeletonCard height={48} />
               <SkeletonCard height={48} />
             </>
-          ) : today.length === 0 ? (
+          ) : todayBooked.length === 0 ? (
             <Text className="text-muted2 text-xs">
-              Aucune séance aujourd'hui — passe au planning pour ouvrir des créneaux.
+              {todayFreeCount > 0
+                ? `Aucune séance réservée aujourd'hui — ${todayFreeCount} créneau${
+                    todayFreeCount > 1 ? 'x' : ''
+                  } libre${todayFreeCount > 1 ? 's' : ''} en attente.`
+                : "Aucune séance aujourd'hui — passe au planning pour ouvrir des créneaux."}
             </Text>
           ) : (
-            today.map((l: Lesson, i: number) => {
+            todayBooked.map((l: Lesson, i: number) => {
               const studentName = (l as unknown as {
                 students?: { profiles?: { first_name: string; last_name: string } | null } | null;
               }).students?.profiles;
@@ -277,6 +291,14 @@ export default function InstructorHome() {
               );
             })
           )}
+          {/* L'info des créneaux libres n'est pas perdue, juste reléguée : ce
+              qui compte sur l'accueil, ce sont les séances qui ont lieu. */}
+          {!todayLoading && todayBooked.length > 0 && todayFreeCount > 0 ? (
+            <Text className="text-muted2 text-[11px] mt-0.5">
+              + {todayFreeCount} créneau{todayFreeCount > 1 ? 'x' : ''} libre
+              {todayFreeCount > 1 ? 's' : ''} aujourd'hui
+            </Text>
+          ) : null}
         </View>
 
         <View className="px-5 flex-row items-center justify-between pt-3 pb-1.5">

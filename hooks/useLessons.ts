@@ -352,15 +352,21 @@ export function useInstructorWeekStats() {
       const end = new Date(start);
       end.setDate(end.getDate() + 7);
 
+      // student_id NOT NULL : un créneau ouvert mais non réservé n'est pas une
+      // séance. Sans ce filtre le KPI comptait les créneaux libres — un
+      // moniteur avec 11 créneaux ouverts et 1 réservation lisait « 11 ».
       const { data, error } = await supabase
         .from('lessons')
         .select('id, status', { count: 'exact', head: false })
         .eq('instructor_id', profile!.id)
+        .not('student_id', 'is', null)
         .gte('scheduled_at', start.toISOString())
         .lt('scheduled_at', end.toISOString())
         .in('status', ['pending', 'confirmed', 'completed']);
       if (error) throw error;
-      return { count: (data ?? []).length };
+      // `.not()` fait retomber l'inférence Supabase sur `never` : on recaste,
+      // comme ailleurs dans ce fichier.
+      return { count: ((data ?? []) as { id: string }[]).length };
     },
   });
 }
