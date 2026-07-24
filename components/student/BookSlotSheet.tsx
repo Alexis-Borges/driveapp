@@ -50,7 +50,7 @@ export function BookSlotSheet({ visible, onClose, slot, balanceHours }: Props) {
     <BottomSheet visible={visible} onClose={onClose}>
       <Text className="text-text text-lg font-bold mb-1">Réserver cette séance</Text>
       <Text className="text-muted text-xs mb-4">
-        Ton moniteur la confirmera dans la foulée.
+        Ton enseignant·e la confirmera dans la foulée.
       </Text>
 
       <View className="bg-card2 rounded-2xl px-4 py-3 mb-3 gap-1.5">

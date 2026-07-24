@@ -97,7 +97,7 @@ export default function StudentHome() {
           items={[
             {
               id: 'link',
-              title: 'Lier ton moniteur',
+              title: 'Rejoindre mon enseignant·e',
               done: !!pkg?.instructor_id,
               cta: 'Lier',
               onPress: () => setLinkOpen(true),
@@ -132,7 +132,7 @@ export default function StudentHome() {
             disabled={!!pkg?.instructor_id && !instructorVerified}
             disabledReason={
               pkg?.instructor_id && !instructorVerified
-                ? 'Ton moniteur doit activer Stripe pour recevoir les paiements.'
+                ? 'Ton enseignant·edoit activer Stripe pour recevoir les paiements.'
                 : undefined
             }
           />
@@ -164,7 +164,7 @@ export default function StudentHome() {
           <LockedRow
             icon="lock"
             title="Évaluation de conduite"
-            subtitle="En attente de planification par votre monitrice"
+            subtitle="En attente de planification par ton enseignant·e"
           />
         )}
 
@@ -211,7 +211,7 @@ export default function StudentHome() {
             <EmptyState
               icon="calendar"
               title="Aucun créneau disponible"
-              body="Ton moniteur n'a pas encore ouvert de créneau libre. Tu seras notifié dès qu'il y en aura un."
+              body="Ton enseignant·en'a pas encore ouvert de créneau libre. Tu seras notifié dès qu'il y en aura un."
               variant="student"
             />
           )}

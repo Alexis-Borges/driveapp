@@ -5,6 +5,7 @@ import { useAuthStore } from '../stores/authStore';
 type InstructorSelf = {
   id: string;
   agreement_number: string;
+  invite_code: string | null;
   hourly_rate: number;
   zone_geo: string | null;
   experience_years: number | null;
@@ -20,7 +21,7 @@ export function useInstructorSelf() {
     queryFn: async (): Promise<InstructorSelf | null> => {
       const { data, error } = await supabase
         .from('instructors')
-        .select('id, agreement_number, hourly_rate, zone_geo, experience_years, stripe_account_id, is_verified')
+        .select('id, agreement_number, invite_code, hourly_rate, zone_geo, experience_years, stripe_account_id, is_verified')
         .eq('id', profile!.id)
         .maybeSingle();
       if (error) throw error;

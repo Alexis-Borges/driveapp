@@ -34,7 +34,37 @@ export function useUpdateProfile() {
   });
 }
 
+// Tout ce qui dépend du moniteur rattaché devient obsolète après une liaison.
+const LINK_INVALIDATED_KEYS = [
+  ['student-package'],
+  ['student-balance'],
+  ['student-instructor-stripe'],
+  ['linked-instructor-info'],
+  ['lessons'],
+];
+
+// Liaison via le code d'invitation du moniteur (ex. FERYEL55). Chemin
+// principal : dictable au téléphone, aucune donnée perso échangée.
 export function useLinkInstructorByCode() {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (code: string) => {
+      const { data, error } = await supabase.rpc('link_to_instructor_by_code' as never, {
+        p_code: code.trim().toUpperCase(),
+      } as never);
+      if (error) throw new Error(error.message);
+      return data as { instructor_id: string };
+    },
+    onSuccess: () => {
+      for (const queryKey of LINK_INVALIDATED_KEYS) qc.invalidateQueries({ queryKey });
+    },
+  });
+}
+
+// Liaison via l'email du moniteur. Conservé en repli pour les élèves déjà
+// invités par email avant l'introduction des codes.
+export function useLinkInstructorByEmail() {
   const qc = useQueryClient();
 
   return useMutation({
@@ -46,11 +76,7 @@ export function useLinkInstructorByCode() {
       return data as { instructor_id: string };
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['student-package'] });
-      qc.invalidateQueries({ queryKey: ['student-balance'] });
-      qc.invalidateQueries({ queryKey: ['student-instructor-stripe'] });
-      qc.invalidateQueries({ queryKey: ['linked-instructor-info'] });
-      qc.invalidateQueries({ queryKey: ['lessons'] });
+      for (const queryKey of LINK_INVALIDATED_KEYS) qc.invalidateQueries({ queryKey });
     },
   });
 }

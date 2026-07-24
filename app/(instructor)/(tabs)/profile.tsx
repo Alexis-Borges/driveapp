@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import * as Clipboard from 'expo-clipboard';
+import { track } from '../../../lib/observability';
 import { Button } from '../../../components/ui/Button';
 import { Icon, type IconName } from '../../../components/ui/Icon';
 import { AvatarPicker } from '../../../components/shared/AvatarPicker';
@@ -49,7 +51,8 @@ export default function InstructorProfile() {
   const router = useRouter();
   const [editOpen, setEditOpen] = useState(false);
 
-  const bioParts: string[] = ['Monitrice agréée'];
+  // Pas de forme genrée : le libellé s'affiche à l'identique pour tout le monde.
+  const bioParts: string[] = ['Enseignant·e agréé·e'];
   if (instr?.experience_years) bioParts.push(`${instr.experience_years} ans d'exp.`);
   if (instr?.zone_geo) bioParts.push(instr.zone_geo);
   const bioLine = bioParts.join(' · ');
@@ -63,6 +66,33 @@ export default function InstructorProfile() {
             {profile?.first_name} {profile?.last_name}
           </Text>
           <Text className="text-muted text-xs">{bioLine}</Text>
+        </View>
+
+        <SectionLabel>Mon code élève</SectionLabel>
+        <View className="mx-5 mb-2 bg-instructor/8 border border-instructor/20 rounded-2xl px-3 py-3">
+          <Text className="text-muted text-[11px] leading-5 mb-3">
+            Communique ce code à tes élèves : ils le saisissent dans l'app pour
+            rejoindre ton planning. Il se dicte au téléphone, contrairement à
+            une adresse email.
+          </Text>
+          <View className="bg-bg border border-border rounded-xl px-3 py-2.5 flex-row justify-between items-center">
+            <Text className="text-instructor font-mono text-base tracking-wider">
+              {instr?.invite_code ?? '—'}
+            </Text>
+            <Text
+              accessibilityRole="button"
+              onPress={async () => {
+                const code = instr?.invite_code ?? '';
+                if (!code) return;
+                await Clipboard.setStringAsync(code);
+                track('instructor_code_copied');
+                Alert.alert('Copié', `Code ${code} copié dans le presse-papiers.`);
+              }}
+              className="bg-instructor rounded-md px-3 py-1 text-[11px] font-bold text-[#0f0d2b]"
+            >
+              Copier
+            </Text>
+          </View>
         </View>
 
         <SectionLabel>Paiements</SectionLabel>

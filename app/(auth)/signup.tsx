@@ -85,7 +85,7 @@ export default function Signup() {
         <Text className="text-text text-3xl font-bold mb-2">Créer un compte</Text>
         <Text className="text-muted mb-6">
           {invitedBy
-            ? 'Tu as été invité par ton moniteur — finalise ton inscription.'
+            ? 'Tu as reçu une invitation — finalise ton inscription.'
             : 'Choisis ton rôle pour démarrer.'}
         </Text>
 

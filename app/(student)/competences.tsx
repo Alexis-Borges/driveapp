@@ -49,7 +49,7 @@ export default function StudentCompetences() {
 
         <Text className="text-muted text-xs px-5 mb-3 leading-5">
           Le Référentiel Éducatif de la Conduite découpe l'apprentissage en 4 grandes
-          compétences. Ton moniteur valide chaque sous-compétence au fil des séances.
+          compétences. Ton enseignant·e valide chaque sous-compétence au fil des séances.
         </Text>
         <CompetencesList catalog={catalog} states={states} />
       </ScrollView>

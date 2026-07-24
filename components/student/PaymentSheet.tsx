@@ -74,7 +74,7 @@ export function PaymentSheet({
         <View className="bg-warning/10 border border-warning/25 rounded-2xl px-3 py-2.5 mb-3">
           <Text className="text-warning text-xs font-bold">Paiement indisponible</Text>
           <Text className="text-muted text-[11px] mt-0.5 leading-4">
-            Ton moniteur n'a pas encore activé Stripe. Demande-lui de finaliser
+            Ton enseignant·e n'a pas encore activé Stripe. Demande-lui de finaliser
             son onboarding pour pouvoir payer en ligne.
           </Text>
         </View>

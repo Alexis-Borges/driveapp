@@ -49,7 +49,7 @@ export default function StudentMessages() {
         <AlertCard
           tone="instructor"
           title="Aucun moniteur lié"
-          body="Lie ton moniteur depuis ton profil pour démarrer une conversation."
+          body="Rejoins ton enseignant·e depuis ton profil pour démarrer une conversation."
         />
       </SafeAreaView>
     );
@@ -85,7 +85,7 @@ export default function StudentMessages() {
         >
           {messages.length === 0 ? (
             <Text className="text-muted2 text-xs text-center mt-4">
-              Pose ta première question à ton moniteur 👋
+              Pose ta première question à ton enseignant·e 👋
             </Text>
           ) : (
             messages.map((m) => (

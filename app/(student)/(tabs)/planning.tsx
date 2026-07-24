@@ -41,7 +41,7 @@ export default function StudentPlanning() {
         map[h] = {
           kind: 'mine',
           title: `Ma séance — ${typeLabel(l.type)}`,
-          subtitle: 'Avec ton moniteur · 1h',
+          subtitle: 'Avec ton enseignant·e · 1h',
           status: l.status === 'confirmed' ? 'confirmed' : 'pending',
         };
       } else {
@@ -86,7 +86,7 @@ export default function StudentPlanning() {
         <AlertCard
           tone="instructor"
           title="Aucun moniteur lié"
-          body="Lie ton moniteur depuis ton profil pour voir son planning et réserver."
+          body="Rejoins ton enseignant·e depuis ton profil pour voir son planning et réserver."
         />
       </SafeAreaView>
     );
