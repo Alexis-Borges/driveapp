@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Alert, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '../../components/ui/Button';
 import { BottomSheet } from '../../components/shared/BottomSheet';
@@ -65,7 +65,11 @@ export default function Leaves() {
     <SafeAreaView className="flex-1 bg-bg" edges={['top']}>
       <ScreenHeader title="Mes congés" />
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 32 }}
+        keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+        keyboardShouldPersistTaps="handled"
+      >
         <Text className="text-muted text-xs px-5 mt-3 leading-5">
           Bloque des plages : aucun créneau récurrent ne sera créé pendant un congé,
           et les élèves verront ces plages comme indisponibles.

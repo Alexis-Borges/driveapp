@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
+import { haptics } from '../lib/haptics';
 import { useAuthStore } from '../stores/authStore';
 
 type ProfilePatch = {
@@ -57,8 +58,10 @@ export function useLinkInstructorByCode() {
       return data as { instructor_id: string };
     },
     onSuccess: () => {
+      haptics.success();
       for (const queryKey of LINK_INVALIDATED_KEYS) qc.invalidateQueries({ queryKey });
     },
+    onError: () => haptics.error(),
   });
 }
 
@@ -76,7 +79,9 @@ export function useLinkInstructorByEmail() {
       return data as { instructor_id: string };
     },
     onSuccess: () => {
+      haptics.success();
       for (const queryKey of LINK_INVALIDATED_KEYS) qc.invalidateQueries({ queryKey });
     },
+    onError: () => haptics.error(),
   });
 }

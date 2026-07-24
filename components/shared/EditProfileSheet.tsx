@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Alert, ScrollView, Text } from 'react-native';
+import { Alert, Text } from 'react-native';
 import { BottomSheet } from './BottomSheet';
 import { Button } from '../ui/Button';
 import { TextField } from '../ui/TextField';
@@ -70,7 +70,10 @@ export function EditProfileSheet({ visible, onClose, variant }: Props) {
     <BottomSheet visible={visible} onClose={onClose}>
       <Text className="text-text text-lg font-bold mb-1">Modifier mon profil</Text>
       <Text className="text-muted text-xs mb-4">Tes informations personnelles</Text>
-      <ScrollView keyboardShouldPersistTaps="handled" style={{ maxHeight: 460 }}>
+      {/* Pas de ScrollView ici : BottomSheet en fournit déjà un. Deux scrolls
+          verticaux imbriqués se disputent le geste et le champ Description
+          devenait difficile à atteindre. */}
+      <>
         <TextField label="Prénom" value={firstName} onChangeText={setFirstName} />
         <TextField label="Nom" value={lastName} onChangeText={setLastName} />
         <TextField label="Téléphone" value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
@@ -92,7 +95,7 @@ export function EditProfileSheet({ visible, onClose, variant }: Props) {
           </>
         ) : null}
         <TextField label="Description" value={bio} onChangeText={setBio} multiline />
-      </ScrollView>
+      </>
       <Button
         label="Enregistrer"
         onPress={save}

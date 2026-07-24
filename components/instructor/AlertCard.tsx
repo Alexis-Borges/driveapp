@@ -1,4 +1,5 @@
 import { Pressable, Text, View } from 'react-native';
+import { haptics } from '../../lib/haptics';
 
 type Tone = 'danger' | 'warning' | 'instructor';
 
@@ -42,8 +43,14 @@ export function AlertCard({ tone, title, body, cta, onPress }: Props) {
       <Text className="text-muted text-[11px] leading-5 mt-1">{body}</Text>
       {cta ? (
         <Pressable
-          onPress={onPress}
-          className={`${s.btn} self-start mt-2 px-3 py-1 rounded-full`}
+          accessibilityRole="button"
+          accessibilityLabel={cta}
+          onPress={() => {
+            haptics.tap();
+            onPress?.();
+          }}
+          style={({ pressed }) => (pressed ? { opacity: 0.75 } : null)}
+          className={`${s.btn} self-start mt-2 px-3 py-1.5 rounded-full`}
         >
           <Text className={`${s.btnText} text-[11px] font-bold`}>{cta}</Text>
         </Pressable>

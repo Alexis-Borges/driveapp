@@ -78,9 +78,13 @@ export default function StudentMessages() {
           </View>
         </View>
 
+        {/* cf. chat moniteur : sans keyboardDismissMode le clavier iOS ne
+            peut plus être refermé une fois ouvert. */}
         <ScrollView
           ref={scrollRef}
           contentContainerStyle={{ padding: 13, gap: 8 }}
+          keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+          keyboardShouldPersistTaps="handled"
           onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: false })}
         >
           {messages.length === 0 ? (

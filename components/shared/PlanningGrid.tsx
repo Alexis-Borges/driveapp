@@ -2,6 +2,20 @@ import { Pressable, Text, View } from 'react-native';
 import { Badge } from '../ui/Badge';
 import { PLANNING_HOURS } from '../../lib/planning';
 import { statusLabel } from '../../lib/lessons';
+import { haptics } from '../../lib/haptics';
+
+// Enfoncement commun à toutes les cases : sans retour visuel, un tap sur une
+// case de planning ne donne aucun signe qu'il a été pris en compte.
+const pressStyle = ({ pressed }: { pressed: boolean }) =>
+  pressed ? { opacity: 0.7, transform: [{ scale: 0.99 }] } : null;
+
+// Chaque case déclenche un tap haptique avant son action.
+function withTap(fn: () => void) {
+  return () => {
+    haptics.tap();
+    fn();
+  };
+}
 
 export type SlotState =
   | { kind: 'free' }
@@ -58,7 +72,10 @@ function SlotCell({
   if (state.kind === 'add') {
     return (
       <Pressable
-        onPress={onPressAdd}
+        accessibilityRole="button"
+        accessibilityLabel="Ouvrir ce créneau à la réservation"
+        onPress={withTap(onPressAdd)}
+        style={pressStyle}
         className="flex-1 min-h-[48px] rounded-xl border border-dashed border-border px-3 py-2 justify-center"
       >
         <Text className="text-muted text-sm font-medium">+ Ajouter un créneau</Text>
@@ -69,7 +86,10 @@ function SlotCell({
   if (state.kind === 'free') {
     return (
       <Pressable
-        onPress={onPressFree}
+        accessibilityRole="button"
+        accessibilityLabel={variant === 'student' ? 'Réserver ce créneau' : 'Créneau libre'}
+        onPress={withTap(onPressFree)}
+        style={pressStyle}
         className="flex-1 min-h-[48px] rounded-xl border border-dashed border-student/30 px-3 py-2 justify-center"
       >
         <Text className="text-student text-sm font-medium">+ {variant === 'student' ? 'Disponible' : 'Créneau libre'}</Text>
@@ -90,7 +110,10 @@ function SlotCell({
   if (state.kind === 'mine') {
     return (
       <Pressable
-        onPress={onPressBooked}
+        accessibilityRole="button"
+        accessibilityLabel={`${state.title}. ${state.subtitle}`}
+        onPress={withTap(onPressBooked)}
+        style={pressStyle}
         className="flex-1 min-h-[48px] rounded-xl bg-student/10 border border-student/30 px-3 py-2 justify-center"
       >
         <Text className="text-student text-sm font-medium">{state.title}</Text>
@@ -118,7 +141,10 @@ function SlotCell({
     state.status === 'critical' ? 'Critique' : statusLabel(state.status ?? 'pending');
   return (
     <Pressable
-      onPress={onPressBooked}
+      accessibilityRole="button"
+      accessibilityLabel={`${state.title}. ${state.subtitle}. ${label}`}
+      onPress={withTap(onPressBooked)}
+      style={pressStyle}
       className={`flex-1 min-h-[48px] rounded-xl border px-3 py-2 justify-center ${bg}`}
     >
       <Text className={`text-sm font-medium ${state.status === 'critical' ? 'text-danger' : 'text-text'}`}>

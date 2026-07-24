@@ -81,7 +81,11 @@ export default function Signup() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       className="flex-1 bg-bg"
     >
-      <ScrollView contentContainerStyle={{ padding: 24, paddingTop: 60 }}>
+      <ScrollView
+        contentContainerStyle={{ padding: 24, paddingTop: 60 }}
+        keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+        keyboardShouldPersistTaps="handled"
+      >
         <Text className="text-text text-3xl font-bold mb-2">Créer un compte</Text>
         <Text className="text-muted mb-6">
           {invitedBy

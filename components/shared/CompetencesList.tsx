@@ -1,5 +1,6 @@
 import { Pressable, Text, View } from 'react-native';
 import type { CompetenceRow, CompetenceStatus, StudentCompetenceRow } from '../../types/database';
+import { haptics } from '../../lib/haptics';
 
 const STATUS_COLOR: Record<CompetenceStatus, string> = {
   not_started: 'bg-card2',
@@ -70,7 +71,20 @@ export function CompetencesList({ catalog, states, editable, onChange }: Props) 
               );
               if (!editable || !onChange) return <View key={c.id}>{node}</View>;
               return (
-                <Pressable key={c.id} onPress={() => onChange(c.id, nextStatus(status))}>
+                <Pressable
+                  key={c.id}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${c.label} — ${STATUS_LABEL[status]}. Appuyer pour changer.`}
+                  onPress={() => {
+                    const next = nextStatus(status);
+                    // Acquis = petite victoire : on la marque plus fort qu'un
+                    // simple passage d'état.
+                    if (next === 'acquired') haptics.success();
+                    else haptics.tap();
+                    onChange(c.id, next);
+                  }}
+                  style={({ pressed }) => (pressed ? { opacity: 0.6 } : null)}
+                >
                   {node}
                 </Pressable>
               );

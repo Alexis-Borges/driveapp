@@ -1,5 +1,6 @@
 import { Pressable, Text, View } from 'react-native';
 import { Icon, type IconName } from '../ui/Icon';
+import { haptics } from '../../lib/haptics';
 
 type Tone = 'student' | 'instructor' | 'warning';
 
@@ -41,7 +42,17 @@ export function PackCard({ icon, title, subtitle, price, unit, tone, onPress }: 
   const t = tones[tone];
   return (
     <Pressable
-      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${title}, ${price} ${unit}. ${subtitle}`}
+      onPress={
+        onPress
+          ? () => {
+              haptics.tap();
+              onPress();
+            }
+          : undefined
+      }
+      style={({ pressed }) => (pressed && onPress ? { opacity: 0.8, transform: [{ scale: 0.99 }] } : null)}
       className={`mx-5 mb-2 bg-card border ${t.border} rounded-2xl px-3 py-3 flex-row items-center gap-3`}
     >
       <View className={`${t.iconBg} w-10 h-10 rounded-xl items-center justify-center`}>

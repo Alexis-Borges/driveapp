@@ -1,4 +1,5 @@
 import { ActivityIndicator, Pressable, Text } from 'react-native';
+import { haptics } from '../../lib/haptics';
 
 type Variant = 'instructor' | 'student' | 'outline' | 'danger';
 
@@ -27,8 +28,20 @@ export function Button({ label, onPress, variant = 'instructor', loading, disabl
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityState={{ disabled: isDisabled, busy: loading }}
-      onPress={onPress}
+      // Le retour tactile est branché ici plutôt que sur chaque appelant :
+      // tout bouton de l'app en hérite. `danger` vibre en warning — une
+      // action destructive ne doit pas se sentir comme un tap anodin.
+      onPress={
+        onPress
+          ? () => {
+              if (variant === 'danger') haptics.warning();
+              else haptics.tap();
+              onPress();
+            }
+          : undefined
+      }
       disabled={isDisabled}
+      style={({ pressed }) => (pressed && !isDisabled ? { opacity: 0.85, transform: [{ scale: 0.98 }] } : null)}
       className={`${s.bg} rounded-2xl py-3 px-5 items-center justify-center ${isDisabled ? 'opacity-60' : ''}`}
     >
       {loading ? (

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Pressable, ScrollView, Text } from 'react-native';
+import { haptics } from '../../lib/haptics';
 
 type Props = {
   selected: Date;
@@ -68,8 +69,21 @@ export function DaySelector({
         return (
           <Pressable
             key={d.toISOString()}
-            onPress={() => onSelect(d)}
-            style={{ minWidth: ITEM_WIDTH }}
+            accessibilityRole="button"
+            accessibilityState={{ selected: sel }}
+            accessibilityLabel={d.toLocaleDateString('fr-FR', {
+              weekday: 'long',
+              day: 'numeric',
+              month: 'long',
+            })}
+            onPress={() => {
+              haptics.tap();
+              onSelect(d);
+            }}
+            style={({ pressed }) => ({
+              minWidth: ITEM_WIDTH,
+              opacity: pressed ? 0.7 : 1,
+            })}
             className={`items-center rounded-xl px-2.5 py-1.5 border ${
               sel ? accent : isToday ? 'bg-card border-instructor/40' : 'bg-card border-border'
             }`}

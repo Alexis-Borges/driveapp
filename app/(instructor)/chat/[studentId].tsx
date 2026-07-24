@@ -64,9 +64,15 @@ export default function InstructorChat() {
           </View>
         </View>
 
+        {/* Sans keyboardDismissMode, iOS n'offre aucun moyen de refermer le
+            clavier : pas de touche retour système, et un tap sur la liste ne
+            le ferme pas. On glisse pour le refermer, et un tap passe quand
+            même aux bulles. */}
         <ScrollView
           ref={scrollRef}
           contentContainerStyle={{ padding: 13, gap: 8 }}
+          keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+          keyboardShouldPersistTaps="handled"
           onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: false })}
         >
           {messages.map((m) => (

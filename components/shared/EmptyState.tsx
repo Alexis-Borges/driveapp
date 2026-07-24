@@ -1,5 +1,6 @@
 import { Pressable, Text, View } from 'react-native';
 import { Icon, type IconName } from '../ui/Icon';
+import { haptics } from '../../lib/haptics';
 
 type Props = {
   icon: IconName;
@@ -25,7 +26,13 @@ export function EmptyState({ icon, title, body, cta, onPress, variant = 'instruc
       ) : null}
       {cta ? (
         <Pressable
-          onPress={onPress}
+          accessibilityRole="button"
+          accessibilityLabel={cta}
+          onPress={() => {
+            haptics.tap();
+            onPress?.();
+          }}
+          style={({ pressed }) => (pressed ? { opacity: 0.75 } : null)}
           className={`${accentBg} mt-3 px-4 py-2 rounded-full`}
         >
           <Text className={`${accentText} text-xs font-bold`}>{cta}</Text>
