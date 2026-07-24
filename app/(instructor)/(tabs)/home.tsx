@@ -12,6 +12,7 @@ import { StudentRow } from '../../../components/instructor/StudentRow';
 import { SectionLabel } from '../../../components/shared/SectionLabel';
 import { InviteStudentSheet } from '../../../components/instructor/InviteStudentSheet';
 import { EmptyState } from '../../../components/shared/EmptyState';
+import { ErrorState } from '../../../components/shared/ErrorState';
 import { Checklist, type ChecklistItem } from '../../../components/shared/Checklist';
 import { ProfileCompletenessBanner } from '../../../components/shared/ProfileCompletenessBanner';
 import { FadeInItem } from '../../../components/shared/Animated';
@@ -40,7 +41,13 @@ export default function InstructorHome() {
   const profile = useAuthStore((s) => s.profile);
   const router = useRouter();
   useRealtimeLessons();
-  const { data: students = [], isLoading: studentsLoading } = useInstructorStudents();
+  const {
+    data: students = [],
+    isLoading: studentsLoading,
+    isError: studentsError,
+    isFetching: studentsFetching,
+    refetch: refetchStudents,
+  } = useInstructorStudents();
   const { data: today = [], isLoading: todayLoading } = useTodayLessonsForInstructor();
   const { data: weekStats } = useInstructorWeekStats();
   const { data: referrals = 0 } = useInstructorReferralCount();
@@ -290,6 +297,12 @@ export default function InstructorHome() {
               <SkeletonCard height={52} />
               <SkeletonCard height={52} />
             </>
+          ) : studentsError && students.length === 0 ? (
+            <ErrorState
+              what="tes élèves"
+              onRetry={() => refetchStudents()}
+              retrying={studentsFetching}
+            />
           ) : students.length === 0 ? (
             <EmptyState
               icon="users"

@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AlertCard } from '../../../components/instructor/AlertCard';
 import { DaySelector } from '../../../components/shared/DaySelector';
 import { PlanningGrid, type SlotState } from '../../../components/shared/PlanningGrid';
+import { ErrorState } from '../../../components/shared/ErrorState';
 import { useStudentLessonsForDay, type Lesson } from '../../../hooks/useLessons';
 import { useStudentBalance, useStudentPackage } from '../../../hooks/useBalance';
 import { useAuthStore } from '../../../stores/authStore';
@@ -26,7 +27,12 @@ export default function StudentPlanning() {
     d.setHours(0, 0, 0, 0);
     return d;
   });
-  const { data: lessons = [] } = useStudentLessonsForDay(selected, pkg?.instructor_id ?? null);
+  const {
+    data: lessons = [],
+    isError: lessonsError,
+    isFetching: lessonsFetching,
+    refetch: refetchLessons,
+  } = useStudentLessonsForDay(selected, pkg?.instructor_id ?? null);
   const { data: instrInfo } = useLinkedInstructorInfo(pkg?.instructor_id ?? null);
   const [bookingSlot, setBookingSlot] = useState<Lesson | null>(null);
   const [detailLesson, setDetailLesson] = useState<Lesson | null>(null);
@@ -149,12 +155,23 @@ export default function StudentPlanning() {
         <DaySelector selected={selected} onSelect={setSelected} variant="student" />
 
         <View className="h-2.5" />
-        <PlanningGrid
-          slots={slots}
-          variant="student"
-          onPressFree={reserveAt}
-          onPressBooked={openMine}
-        />
+        {/* On n'écrase pas des données encore affichables : React Query garde
+            le dernier résultat en cas d'échec de rafraîchissement. L'erreur ne
+            s'affiche que si la grille serait vide de toute façon. */}
+        {lessonsError && lessons.length === 0 ? (
+          <ErrorState
+            what="ton planning"
+            onRetry={() => refetchLessons()}
+            retrying={lessonsFetching}
+          />
+        ) : (
+          <PlanningGrid
+            slots={slots}
+            variant="student"
+            onPressFree={reserveAt}
+            onPressBooked={openMine}
+          />
+        )}
       </ScrollView>
 
       <BookSlotSheet

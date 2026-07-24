@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '../../../components/ui/Button';
 import { DaySelector } from '../../../components/shared/DaySelector';
 import { PlanningGrid, type SlotState } from '../../../components/shared/PlanningGrid';
+import { ErrorState } from '../../../components/shared/ErrorState';
 import { useInstructorLessonsForDay, type Lesson } from '../../../hooks/useLessons';
 import { LessonActionSheet } from '../../../components/instructor/LessonActionSheet';
 import { CreateSlotSheet } from '../../../components/instructor/CreateSlotSheet';
@@ -23,7 +24,12 @@ export default function InstructorPlanning() {
     return d;
   });
   const [view, setView] = useState<'day' | 'week'>('day');
-  const { data: lessons = [] } = useInstructorLessonsForDay(selected);
+  const {
+    data: lessons = [],
+    isError: lessonsError,
+    isFetching: lessonsFetching,
+    refetch: refetchLessons,
+  } = useInstructorLessonsForDay(selected);
   const { data: studentsList = [] } = useInstructorStudents();
   const { data: instr } = useInstructorSelf();
   const worksLunchHour = !!instr?.works_lunch_hour;
@@ -188,26 +194,36 @@ export default function InstructorPlanning() {
               </View>
             </View>
 
-            <PlanningGrid
-              slots={slots}
-              variant="instructor"
-              onPressBooked={(hour) => {
-                const l = (lessons as Lesson[]).find(
-                  (x) => new Date(x.scheduled_at).getHours() === hour
-                );
-                if (l) setActionLesson(l);
-              }}
-              onPressFree={(hour) => {
-                const l = (lessons as Lesson[]).find(
-                  (x) => new Date(x.scheduled_at).getHours() === hour
-                );
-                if (l) setActionLesson(l);
-              }}
-              onPressAdd={(hour) => {
-                setCreateHour(hour);
-                setCreateOpen(true);
-              }}
-            />
+            {/* cf. planning élève : on ne masque pas des données encore
+                valides gardées en cache par React Query. */}
+            {lessonsError && lessons.length === 0 ? (
+              <ErrorState
+                what="ton planning"
+                onRetry={() => refetchLessons()}
+                retrying={lessonsFetching}
+              />
+            ) : (
+              <PlanningGrid
+                slots={slots}
+                variant="instructor"
+                onPressBooked={(hour) => {
+                  const l = (lessons as Lesson[]).find(
+                    (x) => new Date(x.scheduled_at).getHours() === hour
+                  );
+                  if (l) setActionLesson(l);
+                }}
+                onPressFree={(hour) => {
+                  const l = (lessons as Lesson[]).find(
+                    (x) => new Date(x.scheduled_at).getHours() === hour
+                  );
+                  if (l) setActionLesson(l);
+                }}
+                onPressAdd={(hour) => {
+                  setCreateHour(hour);
+                  setCreateOpen(true);
+                }}
+              />
+            )}
           </>
         ) : null}
 

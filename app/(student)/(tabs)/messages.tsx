@@ -5,6 +5,7 @@ import { ChatBubble } from '../../../components/shared/ChatBubble';
 import { ChatInput } from '../../../components/shared/ChatInput';
 import { AlertCard } from '../../../components/instructor/AlertCard';
 import { useConversation, useSendMessage, useMarkRead } from '../../../hooks/useMessages';
+import { ErrorState } from '../../../components/shared/ErrorState';
 import { useStudentPackage } from '../../../hooks/useBalance';
 import { useAuthStore } from '../../../stores/authStore';
 import { useQuery } from '@tanstack/react-query';
@@ -14,7 +15,12 @@ export default function StudentMessages() {
   const profile = useAuthStore((s) => s.profile);
   const { data: pkg } = useStudentPackage();
   const instructorId = pkg?.instructor_id ?? null;
-  const { data: messages = [] } = useConversation(instructorId);
+  const {
+    data: messages = [],
+    isError: messagesError,
+    isFetching: messagesFetching,
+    refetch: refetchMessages,
+  } = useConversation(instructorId);
   const send = useSendMessage(instructorId);
   const markRead = useMarkRead(instructorId);
   const scrollRef = useRef<ScrollView>(null);
@@ -87,7 +93,13 @@ export default function StudentMessages() {
           keyboardShouldPersistTaps="handled"
           onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: false })}
         >
-          {messages.length === 0 ? (
+          {messagesError && messages.length === 0 ? (
+            <ErrorState
+              what="la conversation"
+              onRetry={() => refetchMessages()}
+              retrying={messagesFetching}
+            />
+          ) : messages.length === 0 ? (
             <Text className="text-muted2 text-xs text-center mt-4">
               Pose ta première question à ton enseignant·e 👋
             </Text>

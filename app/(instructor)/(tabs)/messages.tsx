@@ -5,6 +5,7 @@ import { useMarkUnread, useThreadList } from '../../../hooks/useMessages';
 import { SkeletonList } from '../../../components/shared/Skeleton';
 import { FadeInItem } from '../../../components/shared/Animated';
 import { EmptyState } from '../../../components/shared/EmptyState';
+import { ErrorState } from '../../../components/shared/ErrorState';
 
 function formatTime(iso: string) {
   const d = new Date(iso);
@@ -17,7 +18,13 @@ function formatTime(iso: string) {
 
 export default function InstructorMessages() {
   const router = useRouter();
-  const { data: threads = [], isLoading } = useThreadList();
+  const {
+    data: threads = [],
+    isLoading,
+    isError,
+    isFetching,
+    refetch,
+  } = useThreadList();
   const markUnread = useMarkUnread();
 
   function onLongPressThread(otherId: string, unread: number) {
@@ -42,6 +49,8 @@ export default function InstructorMessages() {
         <View className="mt-2">
           <SkeletonList count={5} row />
         </View>
+      ) : isError && threads.length === 0 ? (
+        <ErrorState what="tes conversations" onRetry={() => refetch()} retrying={isFetching} />
       ) : threads.length === 0 ? (
         <EmptyState
           icon="message"

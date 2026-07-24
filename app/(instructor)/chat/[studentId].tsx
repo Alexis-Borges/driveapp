@@ -5,6 +5,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { ChatBubble } from '../../../components/shared/ChatBubble';
 import { ChatInput } from '../../../components/shared/ChatInput';
+import { ErrorState } from '../../../components/shared/ErrorState';
 import { useConversation, useSendMessage, useMarkRead } from '../../../hooks/useMessages';
 import { useAuthStore } from '../../../stores/authStore';
 import { supabase } from '../../../lib/supabase';
@@ -13,7 +14,12 @@ export default function InstructorChat() {
   const { studentId } = useLocalSearchParams<{ studentId: string }>();
   const router = useRouter();
   const profile = useAuthStore((s) => s.profile);
-  const { data: messages = [] } = useConversation(studentId ?? null);
+  const {
+    data: messages = [],
+    isError: messagesError,
+    isFetching: messagesFetching,
+    refetch: refetchMessages,
+  } = useConversation(studentId ?? null);
   const send = useSendMessage(studentId ?? null);
   const markRead = useMarkRead(studentId ?? null);
   const scrollRef = useRef<ScrollView>(null);
@@ -75,14 +81,22 @@ export default function InstructorChat() {
           keyboardShouldPersistTaps="handled"
           onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: false })}
         >
-          {messages.map((m) => (
-            <ChatBubble
-              key={m.id}
-              content={m.content}
-              mine={m.sender_id === profile?.id}
-              variant="instructor"
+          {messagesError && messages.length === 0 ? (
+            <ErrorState
+              what="la conversation"
+              onRetry={() => refetchMessages()}
+              retrying={messagesFetching}
             />
-          ))}
+          ) : (
+            messages.map((m) => (
+              <ChatBubble
+                key={m.id}
+                content={m.content}
+                mine={m.sender_id === profile?.id}
+                variant="instructor"
+              />
+            ))
+          )}
         </ScrollView>
 
         <ChatInput
