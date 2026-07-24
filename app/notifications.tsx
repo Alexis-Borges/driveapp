@@ -19,6 +19,10 @@ import { useRefresh } from '../hooks/useRefresh';
 import { useAuthStore } from '../stores/authStore';
 import { haptics } from '../lib/haptics';
 
+// Largeur du panneau de suppression révélé par le glissement. Sert aussi à
+// dériver le seuil d'ouverture, qui doit rester en deçà pour être atteignable.
+const ACTION_WIDTH = 84;
+
 // « il y a 3 h » plutôt qu'une date absolue : sur un flux d'activité, la
 // fraîcheur compte plus que l'horodatage exact.
 function relativeTime(iso: string): string {
@@ -46,6 +50,13 @@ export default function Notifications() {
 
   const unread = items.filter((n) => !n.read_at).length;
   const accent = variant === 'student' ? '#00C896' : '#7C75FF';
+
+  // Tap sur le bouton révélé et glissement complet partagent ce chemin, pour
+  // qu'ils ne puissent pas diverger.
+  function deleteNotification(n: Notification) {
+    haptics.warning();
+    remove.mutate(n.id);
+  }
 
   function open(n: Notification) {
     haptics.tap();
@@ -98,26 +109,38 @@ export default function Notifications() {
           <View className="px-5 gap-1.5 pt-1">
             {items.map((n, i) => (
               <FadeInItem key={n.id} index={i}>
-                {/* Glisser vers la droite révèle le panneau de suppression à
-                    gauche. `friction` freine le geste pour qu'un scroll
-                    horizontal accidentel ne déclenche pas la suppression, et
-                    le seuil est haut pour la même raison. */}
+                {/* Glisser vers la droite révèle le panneau de suppression.
+                    Deux façons de conclure : relâcher au-delà du seuil, ou
+                    appuyer sur le bouton révélé — le panneau doit être
+                    cliquable, sinon un glissement partiel laisse un bouton
+                    inerte à l'écran.
+                    friction 1 : au-dessus, le doigt parcourt le double de la
+                    distance dont la ligne se déplace, et le seuil n'est
+                    jamais atteint en pratique. */}
                 <ReanimatedSwipeable
-                  friction={2}
-                  leftThreshold={72}
+                  friction={1}
+                  leftThreshold={ACTION_WIDTH * 0.6}
                   overshootLeft={false}
                   renderLeftActions={() => (
-                    <View className="justify-center pl-1 pr-3">
-                      <View className="bg-danger rounded-2xl px-4 py-3 flex-row items-center gap-2">
-                        <Icon name="trash" size={15} color="#fff" />
-                        <Text className="text-white text-xs font-bold">Supprimer</Text>
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityLabel={`Supprimer la notification ${n.title}`}
+                      onPress={() => deleteNotification(n)}
+                      style={({ pressed }) => ({
+                        width: ACTION_WIDTH,
+                        opacity: pressed ? 0.8 : 1,
+                      })}
+                      className="justify-center pr-2"
+                    >
+                      <View className="flex-1 bg-danger rounded-2xl items-center justify-center gap-1">
+                        <Icon name="trash" size={16} color="#fff" />
+                        <Text className="text-white text-[10px] font-bold">Supprimer</Text>
                       </View>
-                    </View>
+                    </Pressable>
                   )}
                   onSwipeableOpen={(direction) => {
                     if (direction !== 'left') return;
-                    haptics.warning();
-                    remove.mutate(n.id);
+                    deleteNotification(n);
                   }}
                 >
                 <Pressable
