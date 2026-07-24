@@ -13,6 +13,7 @@ import { SectionLabel } from '../../../components/shared/SectionLabel';
 import { InviteStudentSheet } from '../../../components/instructor/InviteStudentSheet';
 import { EmptyState } from '../../../components/shared/EmptyState';
 import { ErrorState } from '../../../components/shared/ErrorState';
+import { NotificationBell } from '../../../components/shared/NotificationBell';
 import { Checklist, type ChecklistItem } from '../../../components/shared/Checklist';
 import { ProfileCompletenessBanner } from '../../../components/shared/ProfileCompletenessBanner';
 import { FadeInItem } from '../../../components/shared/Animated';
@@ -180,11 +181,14 @@ export default function InstructorHome() {
               <Badge label="Moniteur" tone="instructor" />
             </View>
           </View>
-          <Avatar
-            initials={`${profile?.first_name?.[0] ?? ''}${profile?.last_name?.[0] ?? ''}`}
-            variant="instructor"
-            url={profile?.avatar_url ?? undefined}
-          />
+          <View className="flex-row items-center gap-2">
+            <NotificationBell variant="instructor" />
+            <Avatar
+              initials={`${profile?.first_name?.[0] ?? ''}${profile?.last_name?.[0] ?? ''}`}
+              variant="instructor"
+              url={profile?.avatar_url ?? undefined}
+            />
+          </View>
         </View>
 
         <Checklist items={checklist} variant="instructor" />

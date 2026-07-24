@@ -14,13 +14,27 @@ Deno.serve(async (req) => {
     if (!user_id || !title || !body) throw new Error('Missing fields');
 
     const admin = adminClient();
+
+    // Historique d'abord, envoi ensuite : une notification doit rester
+    // consultable même sans token push (permission refusée, appareil éteint)
+    // ou si Expo échoue. C'est le seul point de passage de tous les envois,
+    // triggers DB compris.
+    const { error: histErr } = await admin.from('notifications').insert({
+      user_id,
+      title,
+      body,
+      data: data ?? {},
+    });
+    // Un historique en échec ne doit pas empêcher la notification de partir.
+    if (histErr) console.error('notification history insert failed:', histErr.message);
+
     const { data: tokens } = await admin
       .from('push_tokens')
       .select('token')
       .eq('user_id', user_id);
 
     if (!tokens || tokens.length === 0) {
-      return new Response(JSON.stringify({ sent: 0 }), {
+      return new Response(JSON.stringify({ sent: 0, stored: !histErr }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }

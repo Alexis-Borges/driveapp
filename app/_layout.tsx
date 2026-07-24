@@ -50,6 +50,9 @@ const queryClient = new QueryClient({
   },
 });
 
+// Écrans hors portail de rôle, atteignables par tout compte authentifié.
+const SHARED_ROUTES = new Set(['legal', 'notifications']);
+
 function RootNav() {
   useAuthBootstrap();
   usePushRegistration();
@@ -77,6 +80,10 @@ function RootNav() {
       return;
     }
     if (!profile) return; // wait for profile fetch
+    // Le renvoi vers le portail du rôle ne doit pas happer les écrans communs
+    // aux deux rôles : sans cette exception, ouvrir les CGU ou les
+    // notifications depuis le profil renvoyait aussitôt à l'accueil.
+    if (SHARED_ROUTES.has(segments[0])) return;
     if (profile.role === 'admin' && segments[0] !== '(admin)') {
       router.replace('/(admin)/home');
     } else if (profile.role === 'instructor' && segments[0] !== '(instructor)') {
@@ -101,6 +108,8 @@ function RootNav() {
       <Stack.Screen name="(student)" />
       <Stack.Screen name="(admin)" />
       <Stack.Screen name="legal" />
+      {/* Hors des groupes de rôle : les deux portails y accèdent. */}
+      <Stack.Screen name="notifications" />
     </Stack>
   );
 }

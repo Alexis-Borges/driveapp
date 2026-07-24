@@ -33,6 +33,7 @@ import {
 } from '../../../hooks/useLessons';
 import { typeLabel } from '../../../lib/lessons';
 import { BookSlotSheet } from '../../../components/student/BookSlotSheet';
+import { NotificationBell } from '../../../components/shared/NotificationBell';
 
 function formatLessonTime(iso: string) {
   const d = new Date(iso);
@@ -86,11 +87,14 @@ export default function StudentHome() {
               <Badge label="Élève" tone="student" />
             </View>
           </View>
-          <Avatar
-            initials={`${profile?.first_name?.[0] ?? ''}${profile?.last_name?.[0] ?? ''}`}
-            variant="student"
-            url={profile?.avatar_url ?? undefined}
-          />
+          <View className="flex-row items-center gap-2">
+            <NotificationBell variant="student" />
+            <Avatar
+              initials={`${profile?.first_name?.[0] ?? ''}${profile?.last_name?.[0] ?? ''}`}
+              variant="student"
+              url={profile?.avatar_url ?? undefined}
+            />
+          </View>
         </View>
 
         <Checklist

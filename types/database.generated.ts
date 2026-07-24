@@ -360,6 +360,44 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          body: string
+          created_at: string
+          data: Json
+          id: string
+          read_at: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          data?: Json
+          id?: string
+          read_at?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          data?: Json
+          id?: string
+          read_at?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payments: {
         Row: {
           amount_cents: number
@@ -758,6 +796,7 @@ export type Database = {
         Returns: Json
       }
       link_to_instructor_by_code: { Args: { p_code: string }; Returns: Json }
+      mark_all_notifications_read: { Args: never; Returns: number }
       next_invoice_number: { Args: never; Returns: string }
       refund_student_hours: {
         Args: { p_hours: number; p_student_id: string }
