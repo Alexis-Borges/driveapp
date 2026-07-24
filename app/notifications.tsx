@@ -1,5 +1,6 @@
 import { Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { useRouter } from 'expo-router';
 import { ScreenHeader } from '../components/shared/ScreenHeader';
 import { SkeletonList } from '../components/shared/Skeleton';
@@ -9,6 +10,7 @@ import { ErrorState } from '../components/shared/ErrorState';
 import { Icon } from '../components/ui/Icon';
 import {
   useNotifications,
+  useDeleteNotification,
   useMarkAllNotificationsRead,
   useMarkNotificationRead,
   type Notification,
@@ -39,6 +41,7 @@ export default function Notifications() {
   const { data: items = [], isLoading, isError, isFetching, refetch } = useNotifications();
   const markRead = useMarkNotificationRead();
   const markAll = useMarkAllNotificationsRead();
+  const remove = useDeleteNotification();
   const { refreshing, onRefresh } = useRefresh(['notifications', 'notifications-unread']);
 
   const unread = items.filter((n) => !n.read_at).length;
@@ -95,6 +98,28 @@ export default function Notifications() {
           <View className="px-5 gap-1.5 pt-1">
             {items.map((n, i) => (
               <FadeInItem key={n.id} index={i}>
+                {/* Glisser vers la droite révèle le panneau de suppression à
+                    gauche. `friction` freine le geste pour qu'un scroll
+                    horizontal accidentel ne déclenche pas la suppression, et
+                    le seuil est haut pour la même raison. */}
+                <ReanimatedSwipeable
+                  friction={2}
+                  leftThreshold={72}
+                  overshootLeft={false}
+                  renderLeftActions={() => (
+                    <View className="justify-center pl-1 pr-3">
+                      <View className="bg-danger rounded-2xl px-4 py-3 flex-row items-center gap-2">
+                        <Icon name="trash" size={15} color="#fff" />
+                        <Text className="text-white text-xs font-bold">Supprimer</Text>
+                      </View>
+                    </View>
+                  )}
+                  onSwipeableOpen={(direction) => {
+                    if (direction !== 'left') return;
+                    haptics.warning();
+                    remove.mutate(n.id);
+                  }}
+                >
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel={`${n.title}. ${n.body}`}
@@ -127,6 +152,7 @@ export default function Notifications() {
                     </View>
                   ) : null}
                 </Pressable>
+                </ReanimatedSwipeable>
               </FadeInItem>
             ))}
           </View>

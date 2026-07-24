@@ -100,6 +100,34 @@ export function useMarkNotificationRead() {
   });
 }
 
+export function useDeleteNotification() {
+  const profile = useAuthStore((s) => s.profile);
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('notifications').delete().eq('id', id);
+      if (error) throw error;
+    },
+    // Retrait optimiste : la ligne disparaît sous le doigt. Sans ça elle
+    // reviendrait à sa place le temps de l'aller-retour réseau.
+    onMutate: async (id) => {
+      const key = ['notifications', profile?.id];
+      await qc.cancelQueries({ queryKey: key });
+      const previous = qc.getQueryData<Notification[]>(key);
+      qc.setQueryData<Notification[]>(key, (old) => (old ?? []).filter((n) => n.id !== id));
+      return { key, previous };
+    },
+    onError: (_e, _id, ctx) => {
+      haptics.error();
+      if (ctx?.previous) qc.setQueryData(ctx.key, ctx.previous);
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ['notifications'] });
+      qc.invalidateQueries({ queryKey: ['notifications-unread'] });
+    },
+  });
+}
+
 export function useMarkAllNotificationsRead() {
   const qc = useQueryClient();
   return useMutation({
