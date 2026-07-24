@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
+import { uniqueChannelName } from '../lib/realtime';
 import { useAuthStore } from '../stores/authStore';
 
 export type Message = {
@@ -15,7 +16,8 @@ export type Message = {
 export function useConversation(otherId: string | null) {
   const profile = useAuthStore((s) => s.profile);
   const qc = useQueryClient();
-  const queryKey = ['messages', profile?.id, otherId];
+  const profileId = profile?.id ?? null;
+  const queryKey = ['messages', profileId, otherId];
 
   const query = useQuery({
     queryKey,
@@ -33,21 +35,24 @@ export function useConversation(otherId: string | null) {
     },
   });
 
+  // Dépendances volontairement réduites à des chaînes : `profile` est un
+  // objet et `queryKey` un tableau reconstruit à chaque rendu — les garder
+  // ici relançait l'effet en boucle, d'où la cascade de souscriptions.
   useEffect(() => {
-    if (!profile || !otherId) return;
-    // channel name unique par montage : évite les collisions de souscription
+    if (!profileId || !otherId) return;
+    const key = ['messages', profileId, otherId];
     const channel = supabase
-      .channel(`messages:${profile.id}:${otherId}:${Date.now()}`)
+      .channel(uniqueChannelName(`messages:${profileId}:${otherId}`))
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'messages' },
         (payload) => {
           const m = payload.new as Message;
           const involves =
-            (m.sender_id === profile.id && m.recipient_id === otherId) ||
-            (m.sender_id === otherId && m.recipient_id === profile.id);
+            (m.sender_id === profileId && m.recipient_id === otherId) ||
+            (m.sender_id === otherId && m.recipient_id === profileId);
           if (!involves) return;
-          qc.setQueryData<Message[]>(queryKey, (old) => {
+          qc.setQueryData<Message[]>(key, (old) => {
             const list = old ?? [];
             // dé-dup : ignore si l'id existe déjà, et remplace un éventuel
             // message optimiste (id temp- + même contenu/expéditeur).
@@ -70,7 +75,7 @@ export function useConversation(otherId: string | null) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [profile, otherId, qc, queryKey]);
+  }, [profileId, otherId, qc]);
 
   return query;
 }

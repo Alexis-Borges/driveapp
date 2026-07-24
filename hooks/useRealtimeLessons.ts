@@ -1,14 +1,15 @@
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
+import { uniqueChannelName } from '../lib/realtime';
 import { useAuthStore } from '../stores/authStore';
 
 /**
  * Subscribes to lessons changes for the current user (instructor or student)
  * and invalidates all dependent queries on each event.
  *
- * Each call creates a fresh channel (timestamp suffix) so React StrictMode
- * double-mount doesn't trip "cannot add callbacks after subscribe()".
+ * Each call creates a fresh channel so a React StrictMode double-mount
+ * doesn't trip "cannot add callbacks after subscribe()".
  */
 export function useRealtimeLessons() {
   const profile = useAuthStore((s) => s.profile);
@@ -22,7 +23,7 @@ export function useRealtimeLessons() {
         ? `instructor_id=eq.${profile.id}`
         : `student_id=eq.${profile.id}`;
 
-    const channelName = `lessons:${profile.id}:${Date.now()}`;
+    const channelName = uniqueChannelName(`lessons:${profile.id}`);
     const channel = supabase.channel(channelName);
     channel.on(
       'postgres_changes',
@@ -55,7 +56,7 @@ export function useRealtimeInstructorSlots(instructorId: string | null) {
 
   useEffect(() => {
     if (!instructorId) return;
-    const channelName = `instructor-slots:${instructorId}:${Date.now()}`;
+    const channelName = uniqueChannelName(`instructor-slots:${instructorId}`);
     const channel = supabase.channel(channelName);
     channel.on(
       'postgres_changes',
