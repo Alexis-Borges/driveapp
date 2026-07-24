@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Alert, ScrollView, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Clipboard from 'expo-clipboard';
 import { PackCard } from '../../../components/student/PackCard';
@@ -85,11 +85,19 @@ export default function StudentShop() {
           <Text className="text-muted text-[11px] leading-5 mb-3">
             1 ami inscrit avec ton code = 1 séance offerte OU −50 € sur le prochain forfait.
           </Text>
-          <View className="bg-bg border border-border rounded-xl px-3 py-2.5 flex-row justify-between items-center mb-2.5">
-            <Text className="text-student2 font-mono text-base tracking-wider">
+          <View className="bg-bg border border-border rounded-xl px-3 py-2.5 flex-row items-center gap-3 mb-2.5">
+            {/* Même garde que sur le profil moniteur : un code long ne doit
+                pas pousser le bouton hors de la carte. */}
+            <Text
+              numberOfLines={1}
+              className="flex-1 text-student2 font-mono text-base tracking-wider"
+            >
               {pkg?.referral_code ?? '—'}
             </Text>
-            <Text
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Copier mon code parrainage"
+              disabled={!pkg?.referral_code}
               onPress={async () => {
                 const code = pkg?.referral_code ?? '';
                 if (!code) return;
@@ -97,10 +105,10 @@ export default function StudentShop() {
                 track('referral_code_copied');
                 Alert.alert('Copié', `Code ${code} copié dans le presse-papiers.`);
               }}
-              className="bg-student rounded-md px-3 py-1 text-[11px] font-bold text-[#0a1a14]"
+              className="shrink-0 bg-student rounded-md px-3 py-1.5"
             >
-              Copier
-            </Text>
+              <Text className="text-[11px] font-bold text-[#0a1a14]">Copier</Text>
+            </Pressable>
           </View>
           <View className="flex-row gap-1.5">
             <Stat label="Parrainés" value={String(refStats?.count ?? 0)} />

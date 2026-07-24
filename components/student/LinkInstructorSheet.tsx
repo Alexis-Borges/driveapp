@@ -41,34 +41,34 @@ export function LinkInstructorSheet({ visible, onClose }: Props) {
     <BottomSheet visible={visible} onClose={onClose}>
       <Text className="text-text text-lg font-bold mb-1">Rejoindre un enseignant</Text>
 
+      {/* Les deux modes gardent des libellés de longueur comparable, tenant
+          sur une ligne : la feuille est ancrée en bas et dimensionnée par son
+          contenu, donc toute variation de hauteur ferait sauter tout le bloc. */}
+      <Text className="text-muted text-xs mb-4" numberOfLines={1}>
+        {mode === 'code'
+          ? 'Saisis le code de ton enseignant.'
+          : "Saisis l'email de ton enseignant."}
+      </Text>
+
       {mode === 'code' ? (
-        <>
-          <Text className="text-muted text-xs mb-4">
-            Saisis le code que ton enseignant t'a communiqué.
-          </Text>
-          <TextField
-            label="Code enseignant"
-            value={code}
-            onChangeText={(t) => setCode(t.toUpperCase())}
-            autoCapitalize="characters"
-            autoCorrect={false}
-            placeholder="Ex. FERYEL55"
-          />
-        </>
+        <TextField
+          label="Code enseignant"
+          value={code}
+          onChangeText={(t) => setCode(t.toUpperCase())}
+          autoCapitalize="characters"
+          autoCorrect={false}
+          placeholder="Ex. FERYEL55"
+        />
       ) : (
-        <>
-          <Text className="text-muted text-xs mb-4">
-            Saisis l'adresse email de ton enseignant.
-          </Text>
-          <TextField
-            label="Email de l'enseignant"
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            autoCorrect={false}
-            keyboardType="email-address"
-          />
-        </>
+        <TextField
+          label="Email de l'enseignant"
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+          autoCorrect={false}
+          keyboardType="email-address"
+          placeholder="prenom@exemple.fr"
+        />
       )}
 
       <Button
@@ -84,10 +84,8 @@ export function LinkInstructorSheet({ visible, onClose }: Props) {
         onPress={() => setMode(mode === 'code' ? 'email' : 'code')}
         className="mt-3 py-2"
       >
-        <Text className="text-muted2 text-[11px] text-center">
-          {mode === 'code'
-            ? 'Tu n\'as pas de code ? Utiliser une adresse email'
-            : 'Revenir à la saisie du code'}
+        <Text className="text-muted2 text-[11px] text-center" numberOfLines={1}>
+          {mode === 'code' ? 'Utiliser plutôt un email' : 'Utiliser plutôt un code'}
         </Text>
       </Pressable>
     </BottomSheet>

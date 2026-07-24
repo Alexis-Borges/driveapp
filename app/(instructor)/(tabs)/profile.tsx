@@ -75,12 +75,22 @@ export default function InstructorProfile() {
             rejoindre ton planning. Il se dicte au téléphone, contrairement à
             une adresse email.
           </Text>
-          <View className="bg-bg border border-border rounded-xl px-3 py-2.5 flex-row justify-between items-center">
-            <Text className="text-instructor font-mono text-base tracking-wider">
+          <View className="bg-bg border border-border rounded-xl px-3 py-2.5 flex-row items-center gap-3">
+            {/* flex-1 + numberOfLines : un prénom long (MARIECHRISTINE42) ne
+                doit pas pousser le bouton hors de la carte. */}
+            <Text
+              numberOfLines={1}
+              className="flex-1 text-instructor font-mono text-base tracking-wider"
+            >
               {instr?.invite_code ?? '—'}
             </Text>
-            <Text
+            {/* Pressable plutôt qu'un <Text> avec padding : sur Android le
+                padding vertical d'un Text décale la ligne de base et la
+                pastille paraît mal centrée. */}
+            <Pressable
               accessibilityRole="button"
+              accessibilityLabel="Copier mon code élève"
+              disabled={!instr?.invite_code}
               onPress={async () => {
                 const code = instr?.invite_code ?? '';
                 if (!code) return;
@@ -88,10 +98,10 @@ export default function InstructorProfile() {
                 track('instructor_code_copied');
                 Alert.alert('Copié', `Code ${code} copié dans le presse-papiers.`);
               }}
-              className="bg-instructor rounded-md px-3 py-1 text-[11px] font-bold text-[#0f0d2b]"
+              className="shrink-0 bg-instructor rounded-md px-3 py-1.5"
             >
-              Copier
-            </Text>
+              <Text className="text-[11px] font-bold text-[#0f0d2b]">Copier</Text>
+            </Pressable>
           </View>
         </View>
 
