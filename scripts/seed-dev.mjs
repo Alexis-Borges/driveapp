@@ -137,15 +137,22 @@ function makeSlotPicker() {
   };
 }
 
-async function createUser(sb, { email, role, firstName, lastName, extra = {} }) {
-  const { data, error } = await sb.auth.admin.createUser({
-    email,
-    password: DEV_PASSWORD,
-    email_confirm: true,
-    user_metadata: { role, first_name: firstName, last_name: lastName, ...extra },
-  });
-  if (error) throw new Error(`createUser ${email} : ${error.message}`);
-  return data.user;
+// L'API admin renvoie par intermittence « unrecognized JWT kid » sous cadence
+// soutenue. On réessaie avec une pause croissante avant d'abandonner.
+async function createUser(sb, { email, role, firstName, lastName, extra = {} }, attempts = 4) {
+  let last;
+  for (let i = 1; i <= attempts; i++) {
+    const { data, error } = await sb.auth.admin.createUser({
+      email,
+      password: DEV_PASSWORD,
+      email_confirm: true,
+      user_metadata: { role, first_name: firstName, last_name: lastName, ...extra },
+    });
+    if (!error) return data.user;
+    last = error;
+    if (i < attempts) await sleep(500 * i);
+  }
+  throw new Error(`createUser ${email} : ${last.message}`);
 }
 
 // Le trigger handle_new_user crée les lignes profiles/students/instructors.

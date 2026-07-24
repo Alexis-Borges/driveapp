@@ -1,12 +1,13 @@
 import '../global.css';
 import { useEffect } from 'react';
+import type { ComponentType, ReactNode } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { StripeProvider } from '@stripe/stripe-react-native';
+import { isExpoGo } from '../lib/isExpoGo';
 import {
   useFonts,
   DMSans_400Regular,
@@ -21,6 +22,16 @@ import { identify, initObservability, reset as resetObservability } from '../lib
 import { ErrorBoundary } from '../components/shared/ErrorBoundary';
 
 initObservability();
+
+// require() conditionnel : un `import` statique de @stripe/stripe-react-native
+// ferait planter Expo Go au chargement du bundle (module natif absent).
+const StripeProvider: ComponentType<{
+  publishableKey: string;
+  merchantIdentifier: string;
+  children: ReactNode;
+}> = isExpoGo
+  ? ({ children }) => children
+  : require('@stripe/stripe-react-native').StripeProvider;
 
 // Defaults pensés mobile : on évite les refetch redondants (chaque écran
 // remonté re-déclenchait un fetch réseau). Les mutations + Realtime + le

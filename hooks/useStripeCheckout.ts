@@ -1,10 +1,27 @@
-import { useStripe } from '@stripe/stripe-react-native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { track } from '../lib/observability';
 import { haptics } from '../lib/haptics';
+import { isExpoGo } from '../lib/isExpoGo';
 
 type Plan = 'one_shot' | 'three_x';
+
+// require() conditionnel : un `import` statique planterait Expo Go (module
+// natif absent). En preview Expo Go, le paiement échoue proprement avec un
+// message clair au lieu de faire crasher toute l'app au démarrage.
+const useStripe: () => {
+  initPaymentSheet: (opts: unknown) => Promise<{ error?: { message: string } }>;
+  presentPaymentSheet: () => Promise<{ error?: { message: string; code?: string } }>;
+} = isExpoGo
+  ? () => ({
+      initPaymentSheet: async () => ({
+        error: { message: 'Paiement indisponible en preview Expo Go — nécessite un build natif.' },
+      }),
+      presentPaymentSheet: async () => ({
+        error: { message: 'Paiement indisponible en preview Expo Go.' },
+      }),
+    })
+  : require('@stripe/stripe-react-native').useStripe;
 
 export function useStripeCheckout() {
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
