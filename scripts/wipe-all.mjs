@@ -60,8 +60,20 @@ async function count(table) {
 
 console.log(dryRun ? '=== SIMULATION (rien ne sera supprimé) ===\n' : '=== SUPPRESSION ===\n');
 
-const { data: users, error: uErr } = await sb.auth.admin.listUsers({ perPage: 1000 });
-if (uErr) throw new Error(`Lecture des comptes : ${uErr.message}`);
+// Même « unrecognized JWT kid » intermittent que sur deleteUser : la toute
+// première requête admin échoue parfois. On réessaie avant d'abandonner.
+async function listUsersWithRetry(attempts = 4) {
+  let last;
+  for (let i = 1; i <= attempts; i++) {
+    const { data, error } = await sb.auth.admin.listUsers({ perPage: 1000 });
+    if (!error) return data;
+    last = error;
+    if (i < attempts) await sleep(500 * i);
+  }
+  throw new Error(`Lecture des comptes : ${last.message}`);
+}
+
+const users = await listUsersWithRetry();
 console.log(`Comptes auth à supprimer : ${users.users.length}`);
 for (const u of users.users) {
   console.log(`   - ${(u.email ?? u.id).replace(/^(.{2}).*@/, '$1***@')}`);
