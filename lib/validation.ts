@@ -24,6 +24,21 @@ export const resetSchema = z.object({
   email: z.string().email('Email invalide'),
 });
 
+// Étape 2 de la réinitialisation : code reçu par email + nouveau mot de passe.
+// Longueur volontairement souple : le code de récupération Supabase fait 8
+// chiffres en pratique (vérifié via generateLink), mais la longueur dépend de
+// la configuration du projet — la figer à 6 rejetait des codes valides.
+export const newPasswordSchema = z
+  .object({
+    token: z.string().regex(/^\d{6,10}$/, 'Code invalide (6 à 10 chiffres)'),
+    password: z.string().min(6, 'Mot de passe trop court (min. 6 car.)'),
+    confirm: z.string(),
+  })
+  .refine((v) => v.password === v.confirm, {
+    path: ['confirm'],
+    message: 'Les deux mots de passe ne correspondent pas',
+  });
+
 export type LoginInput = z.infer<typeof loginSchema>;
 export type SignupInput = z.infer<typeof signupSchema>;
 
